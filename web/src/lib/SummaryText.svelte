@@ -6,12 +6,12 @@
     collapsedLength?: number;
   };
 
-  let { summary, collapsedLength = 360 }: Props = $props();
+  let { summary, collapsedLength = 560 }: Props = $props();
 
   let expanded = $state(false);
 
   const prepared = $derived(prepareSummary(summary));
-  const collapsible = $derived(prepared.structured && prepared.text.length > collapsedLength);
+  const collapsible = $derived(prepared.text.length > collapsedLength);
   const displayText = $derived(
     !collapsible || expanded ? prepared.text : `${prepared.text.slice(0, collapsedLength).trimEnd()}…`,
   );
