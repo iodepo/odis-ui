@@ -16,7 +16,7 @@ def fake_backend() -> FakeSearchBackend:
 async def client(fake_backend: FakeSearchBackend) -> AsyncIterator[AsyncClient]:
     app.state.search_backends = {
         "elasticsearch": fake_backend,
-        "gleaner": fake_backend,
+        "legacy": fake_backend,
     }
     app.state.default_backend = "elasticsearch"
     app.state.search_backend = fake_backend

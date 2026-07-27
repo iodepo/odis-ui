@@ -8,19 +8,17 @@ from typing import Any
 
 from app.domain.enums import PRIMARY_RECORD_TYPES, SortOrder
 from app.domain.search import (
-    BoundingBox,
     FacetBucket,
-    GeoPoint,
     SearchFacets,
     SearchItem,
     SearchQuery,
     SearchResponse,
     SourceFacetBucket,
     SourceRef,
-    SpatialExtent,
 )
 from app.search.elasticsearch.mappings import raw_types_for_filter
-from app.search.gleaner.ids import GLEANER_SOURCES, encode_record_id, source_from_index
+from app.search.elasticsearch.spatial import extract_spatial_extent
+from app.search.gleaner.ids import encode_record_id
 
 # Gleaner also indexes Course; keep ODIS PRIMARY_RECORD_TYPES unchanged.
 GLEANER_PRIMARY_TYPES: tuple[str, ...] = (*PRIMARY_RECORD_TYPES, "course")
@@ -198,51 +196,6 @@ def _map_highlight(highlight: dict[str, list[str]] | None) -> dict[str, str] | N
     return mapped or None
 
 
-def _extract_spatial(jsonld: Any) -> SpatialExtent | None:
-    """Best-effort spatial from stored JSON-LD (object is not indexed)."""
-    if not isinstance(jsonld, dict):
-        return None
-
-    boxes: list[BoundingBox] = []
-    points: list[GeoPoint] = []
-
-    work_location = jsonld.get("workLocation")
-    if isinstance(work_location, dict):
-        geo = work_location.get("geo")
-        if isinstance(geo, dict):
-            lat = geo.get("latitude")
-            lon = geo.get("longitude")
-            try:
-                if lat is not None and lon is not None:
-                    points.append(GeoPoint(lat=float(lat), lon=float(lon)))
-            except (TypeError, ValueError):
-                pass
-
-    spatial = jsonld.get("spatialCoverage")
-    coverages = spatial if isinstance(spatial, list) else [spatial] if spatial else []
-    for coverage in coverages:
-        if not isinstance(coverage, dict):
-            continue
-        geo = coverage.get("geo")
-        geos = geo if isinstance(geo, list) else [geo] if geo else []
-        for entry in geos:
-            if not isinstance(entry, dict):
-                continue
-            box = entry.get("box")
-            if isinstance(box, str):
-                parts = box.replace(",", " ").split()
-                if len(parts) == 4:
-                    try:
-                        south, west, north, east = (float(p) for p in parts)
-                        boxes.append(BoundingBox(south=south, west=west, north=north, east=east))
-                    except ValueError:
-                        pass
-
-    if not boxes and not points:
-        return None
-    return SpatialExtent(boxes=boxes, points=points)
-
-
 def map_document_to_item(
     es_id: str,
     source: dict[str, Any],
@@ -252,7 +205,7 @@ def map_document_to_item(
     elasticsearch_document_url: str | None = None,
     score: float | None = None,
 ) -> SearchItem:
-    source_code = _as_str(source.get("source")) or (source_from_index(index) if index else None) or "unknown"
+    source_code = _as_str(source.get("source")) or "unknown"
     doc_id = _as_str(source.get("id")) or es_id
     record_id = encode_record_id(source_code, doc_id)
     normalized = _normalize_type(source.get("type"))
@@ -266,10 +219,10 @@ def map_document_to_item(
         url=url,
         source=SourceRef(
             id=source_code,
-            name=GLEANER_SOURCES.get(source_code),
+            name=None,
         ),
         highlight=_map_highlight(highlight),
-        spatial=_extract_spatial(source.get("jsonld")),
+        spatial=extract_spatial_extent(source),
         elasticsearch_document_url=elasticsearch_document_url,
     )
     # Attach score for composite ranking without changing the public schema.
@@ -292,7 +245,6 @@ def map_search_response(
         source = hit.get("_source", {})
         es_id = hit.get("_id", "")
         index = hit.get("_index", "")
-        source_code = _as_str(source.get("source")) or source_from_index(index) or "unknown"
         doc_url = None
         if document_url_for and index:
             doc_url = document_url_for(index, es_id)
@@ -316,7 +268,7 @@ def map_search_response(
     source_facets = [
         SourceFacetBucket(
             id=str(bucket["key"]),
-            name=GLEANER_SOURCES.get(str(bucket["key"])),
+            name=None,
             count=bucket["doc_count"],
         )
         for bucket in aggs.get("sources", {}).get("buckets", {}).get("buckets", [])

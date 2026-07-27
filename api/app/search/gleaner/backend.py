@@ -4,7 +4,7 @@ from app.config import Settings
 from app.domain.errors import RecordNotFoundError
 from app.domain.search import HealthStatus, RecordResponse, SearchQuery, SearchResponse
 from app.search.elasticsearch.urls import elasticsearch_document_url
-from app.search.gleaner.ids import DEFAULT_INDICES, decode_record_id, index_for_source
+from app.search.gleaner.ids import DEFAULT_INDICES, decode_record_id
 from app.search.gleaner.queries import build_search_body, map_document_to_item, map_search_response
 
 
@@ -24,7 +24,7 @@ def create_gleaner_client(settings: Settings) -> AsyncElasticsearch:
 
 
 class GleanerBackend:
-    """Search backend for the Gleaner multi-index cluster (one index per source)."""
+    """Search backend for the federated `odis` index on the Gleaner ES cluster."""
 
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
@@ -36,6 +36,10 @@ class GleanerBackend:
     def indices(self) -> tuple[str, ...]:
         return self._indices
 
+    @property
+    def primary_index(self) -> str:
+        return self._indices[0]
+
     def _document_url(self, index: str, record_id: str) -> str:
         return elasticsearch_document_url(
             self._settings.gleaner_elasticsearch_url,
@@ -43,16 +47,14 @@ class GleanerBackend:
             record_id,
         )
 
-    def _index_list(self, query: SearchQuery) -> str:
-        if not query.sources:
-            return ",".join(self._indices)
-        selected = [index_for_source(source) for source in query.sources]
-        selected = [index for index in selected if index in self._indices]
-        return ",".join(selected) if selected else ",".join(self._indices)
+    def _index_list(self) -> str:
+        # Always search the configured federated index set (default: odis only).
+        # Source facets/filters are applied in the query body, not by switching indices.
+        return ",".join(self._indices)
 
     async def search(self, query: SearchQuery) -> SearchResponse:
         body = build_search_body(query)
-        raw = await self._client.search(index=self._index_list(query), body=body)
+        raw = await self._client.search(index=self._index_list(), body=body)
         payload = raw.body if hasattr(raw, "body") else raw
         return map_search_response(query, payload, document_url_for=self._document_url)
 
@@ -60,8 +62,8 @@ class GleanerBackend:
         decoded = decode_record_id(record_id)
         if decoded is None:
             raise RecordNotFoundError(record_id)
-        source_code, doc_id = decoded
-        index = index_for_source(source_code)
+        _source_code, doc_id = decoded
+        index = self.primary_index
         try:
             doc = await self._client.get(index=index, id=doc_id)
         except NotFoundError as exc:
@@ -82,17 +84,16 @@ class GleanerBackend:
         reachable = False
         detail: str | None = None
         try:
-            # Probe first configured index; cluster may still be up if one index is missing.
-            exists = await self._client.indices.exists(index=self._indices[0])
+            exists = await self._client.indices.exists(index=self.primary_index)
             reachable = bool(exists)
             if not reachable:
-                detail = f"Index '{self._indices[0]}' not found"
+                detail = f"Index '{self.primary_index}' not found"
         except Exception as exc:
             detail = f"{type(exc).__name__}: {exc}"
 
         return HealthStatus(
             status="ok" if reachable else "degraded",
-            backend="gleaner",
+            backend="elasticsearch",
             index=",".join(self._indices),
             index_reachable=reachable,
             detail=detail,

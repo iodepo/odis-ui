@@ -23,18 +23,18 @@ async def test_get_record_not_found(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_gleaner_record_id_routes_without_backend_header() -> None:
+async def test_odis_record_id_routes_without_backend_header() -> None:
     """Browser 'API record' links omit X-Search-Backend; route by id prefix."""
     elasticsearch = FakeSearchBackend()
-    gleaner = FakeSearchBackend()
-    gleaner_id = "gleaner:obis:abc"
-    gleaner.search_response = SearchResponse(
+    legacy = FakeSearchBackend()
+    odis_id = "gleaner:obis:abc"
+    elasticsearch.search_response = SearchResponse(
         total=1,
-        facets=elasticsearch.search_response.facets,
+        facets=legacy.search_response.facets,
         items=[
             SearchItem(
-                id=gleaner_id,
-                title="Gleaner Dataset",
+                id=odis_id,
+                title="ODIS Dataset",
                 summary=None,
                 type="Dataset",
                 url="https://obis.org/dataset/abc",
@@ -44,13 +44,13 @@ async def test_gleaner_record_id_routes_without_backend_header() -> None:
         page=1,
         size=20,
     )
-    app.state.search_backends = {"elasticsearch": elasticsearch, "gleaner": gleaner}
-    app.state.default_backend = "elasticsearch"
-    app.state.search_backend = elasticsearch
+    app.state.search_backends = {"elasticsearch": elasticsearch, "legacy": legacy}
+    app.state.default_backend = "legacy"
+    app.state.search_backend = legacy
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get(f"/api/v1/records/{gleaner_id}")
+        response = await client.get(f"/api/v1/records/{odis_id}")
 
     assert response.status_code == 200
-    assert response.json()["title"] == "Gleaner Dataset"
+    assert response.json()["title"] == "ODIS Dataset"

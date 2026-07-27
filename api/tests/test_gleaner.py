@@ -13,7 +13,7 @@ def test_map_gleaner_dataset() -> None:
     item = map_document_to_item(
         "https://obis.org/dataset/abc",
         {
-            "source": "obis",
+            "source": "ocean-biodiversity-information-system",
             "id": "https://obis.org/dataset/abc",
             "type": ["Dataset"],
             "name": "Turtle tracks",
@@ -21,22 +21,21 @@ def test_map_gleaner_dataset() -> None:
             "url": "https://obis.org/dataset/abc",
             "keywords": ["Occurrence"],
         },
-        index="gleaner-obis",
+        index="odis",
     )
-    assert item.id.startswith("gleaner:obis:")
+    assert item.id.startswith("gleaner:ocean-biodiversity-information-system:")
     assert item.type == "Dataset"
     assert item.title == "Turtle tracks"
     assert item.source is not None
-    assert item.source.id == "obis"
-    assert item.source.name is not None
-    assert "Biodiversity" in item.source.name
+    assert item.source.id == "ocean-biodiversity-information-system"
+    assert item.source.name is None
 
 
 def test_map_gleaner_person_with_geo() -> None:
     item = map_document_to_item(
         "https://oceanexpert.org/expert/1",
         {
-            "source": "oe",
+            "source": "oceanexpert",
             "id": "https://oceanexpert.org/expert/1",
             "type": ["Person"],
             "name": "Ada Lovelace",
@@ -49,7 +48,7 @@ def test_map_gleaner_person_with_geo() -> None:
                 }
             },
         },
-        index="gleaner-oe",
+        index="odis",
     )
     assert item.type == "Person"
     assert item.url == "https://oceanexpert.org/expert/1"
@@ -58,7 +57,9 @@ def test_map_gleaner_person_with_geo() -> None:
 
 
 def test_gleaner_search_body_filters_and_aggs() -> None:
-    body = build_search_body(SearchQuery(q="coral", types=["dataset"], sources=["obis"]))
+    body = build_search_body(
+        SearchQuery(q="coral", types=["dataset"], sources=["ocean-biodiversity-information-system"])
+    )
     assert body["post_filter"]["bool"]["filter"]
     assert "types" in body["aggs"]
     assert "sources" in body["aggs"]

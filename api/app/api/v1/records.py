@@ -9,16 +9,16 @@ from app.search.base import SearchBackend
 
 router = APIRouter(tags=["records"])
 
-_GLEANER_ID_PREFIX = "gleaner:"
+_ODIS_ID_PREFIX = "gleaner:"
 
 
 def _backend_for_record(request: Request, record_id: str, fallback: SearchBackend) -> SearchBackend:
     """Route namespaced ids to their owning backend (links cannot send X-Search-Backend)."""
     backends: dict[str, SearchBackend] = request.app.state.search_backends
-    if record_id.startswith(_GLEANER_ID_PREFIX) and "gleaner" in backends:
-        return backends["gleaner"]
+    # Record ids from the federated `odis` index keep the historical `gleaner:` prefix.
+    if record_id.startswith(_ODIS_ID_PREFIX) and "elasticsearch" in backends:
+        return backends["elasticsearch"]
     return fallback
-
 
 @router.get(
     "/records/{record_id}",

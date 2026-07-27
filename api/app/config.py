@@ -8,19 +8,22 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    # Default: federated `odis` index on the Gleaner ES cluster (:9400).
     search_backend: str = "elasticsearch"
+
+    # Legacy backend (SEARCH_BACKEND=legacy / X-Search-Backend: legacy) — odis_metadata on :9200.
     elasticsearch_url: str = "http://localhost:9200"
     elasticsearch_user: str = ""
     elasticsearch_password: str = ""
     es_index: str = "odis_metadata"
     es_catalogue_index: str = "catalogue"
 
-    # Used when SEARCH_BACKEND=gleaner (multi-index cluster, one index per source)
+    # Default elasticsearch backend — Gleaner cluster hosting the `odis` index.
     gleaner_elasticsearch_url: str = "http://odis.org:9400"
     gleaner_elasticsearch_user: str = ""
     gleaner_elasticsearch_password: str = ""
-    # Comma-separated; empty = default gleaner-obps,gleaner-medin,gleaner-obis,gleaner-oe
-    gleaner_indices: str = ""
+    # Comma-separated; empty = `odis` only (per-source gleaner-* indices are ignored).
+    gleaner_indices: str = "odis"
 
 
 settings = Settings()

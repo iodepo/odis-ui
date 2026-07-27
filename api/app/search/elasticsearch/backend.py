@@ -81,7 +81,7 @@ class ElasticsearchBackend:
         status = "ok" if index_reachable else "degraded"
         return HealthStatus(
             status=status,
-            backend="elasticsearch",
+            backend="legacy",
             index=self.index,
             index_reachable=index_reachable,
             detail=detail,

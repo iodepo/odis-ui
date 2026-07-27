@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gleaner Elasticsearch (port 9400) — backend analysis for ODIS UI</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --border: #2d3a4f;
+      --text: #e7ecf3;
+      --muted: #9aa8bc;
+      --accent: #3d8bfd;
+      --warn: #f0b429;
+      --ok: #3dd68c;
+      --bad: #f87171;
+      --mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, monospace;
+      --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      font-size: 15px;
+    }
+    header {
+      padding: 2rem 1.5rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #152033 0%, var(--bg) 100%);
+    }
+    header h1 { margin: 0 0 0.35rem; font-size: 1.65rem; font-weight: 650; }
+    header .meta { color: var(--muted); font-size: 0.9rem; }
+    main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+    h2 {
+      margin: 2.25rem 0 0.75rem;
+      font-size: 1.25rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.35rem;
+    }
+    h3 { margin: 1.5rem 0 0.5rem; font-size: 1.05rem; color: #c5d4e8; }
+    p { margin: 0.6rem 0; }
+    a { color: var(--accent); }
+    .lead { font-size: 1.05rem; color: #d0dae8; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin: 1.25rem 0;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.1rem;
+    }
+    .card .label { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .card .value { font-size: 1.5rem; font-weight: 650; margin-top: 0.25rem; }
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .badge-warn { background: #3d3218; color: var(--warn); }
+    .badge-ok { background: #163528; color: var(--ok); }
+    .badge-bad { background: #3d1f1f; color: var(--bad); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin: 0.75rem 0 1rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.45rem 0.6rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #1e2a3d; color: #b8c9de; font-weight: 600; }
+    tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+    code, pre {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+    }
+    pre {
+      background: #0c1018;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.85rem 1rem;
+      overflow-x: auto;
+      margin: 0.75rem 0;
+    }
+    ul, ol { margin: 0.5rem 0; padding-left: 1.35rem; }
+    li { margin: 0.35rem 0; }
+    .diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      line-height: 1.45;
+      overflow-x: auto;
+      white-space: pre;
+      color: #b8c9de;
+    }
+    .priority { border-left: 3px solid var(--accent); padding-left: 1rem; margin: 1rem 0; }
+    .priority.p1 { border-left-color: var(--bad); }
+    .priority.p2 { border-left-color: var(--warn); }
+    footer {
+      margin: 3rem 0 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .scroll-table { overflow-x: auto; max-height: 420px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Gleaner Elasticsearch on port 9400</h1>
+    <p class="meta">
+      Analysis for adapting the ODIS search app (<code>SEARCH_BACKEND=gleaner</code>) ·
+      Cluster: <code>http://odis.org:9400</code> ·
+      Generated 2026-07-27 (live probe)
+    </p>
+  </header>
+
+  <main>
+    <p class="lead">
+      The service on port <strong>9400</strong> is an Elasticsearch <strong>8.15.3</strong> cluster named
+      <code>mvp-gleaner</code>, not a separate REST API. Your colleague’s update expands the corpus from four
+      short-named <code>gleaner-*</code> indices to <strong>45 per-source indices</strong> plus a unified
+      <code>odis</code> index. Document shape is consistent, but <strong>source identifiers</strong>,
+      <strong>index naming</strong>, and <strong>which index to query</strong> no longer match what
+      <code>odis-ui</code> assumes today.
+    </p>
+
+    <div class="cards">
+      <div class="card">
+        <div class="label">Indices</div>
+        <div class="value">46</div>
+        <div class="label">45 <code>gleaner-*</code> + <code>odis</code></div>
+      </div>
+      <div class="card">
+        <div class="label"><code>odis</code> documents</div>
+        <div class="value">30,465</div>
+        <div class="label">Federated / cross-source</div>
+      </div>
+      <div class="card">
+        <div class="label">Sum of <code>gleaner-*</code> docs</div>
+        <div class="value">~159k</div>
+        <div class="label">Includes legacy duplicates</div>
+      </div>
+      <div class="card">
+        <div class="label">App default scope</div>
+        <div class="value">4 indices</div>
+        <div class="label"><span class="badge badge-bad">Gap</span> 41+ sources missing</div>
+      </div>
+    </div>
+
+    <h2>1. Executive summary</h2>
+    <ul>
+      <li><strong>Unified search index:</strong> <code>odis</code> holds summoned records from many sources in one place. The <code>source</code> field uses ODISCat-style <strong>slugs</strong> (e.g. <code>ocean-best-practices-system-obps</code>), not the legacy short codes (<code>obps</code>, <code>medin</code>).</li>
+      <li><strong>Per-source indices:</strong> New naming is <code>gleaner-{slug}</code> (e.g. <code>gleaner-portal-marine-environmental-data-and-information-network</code>). Legacy aliases <code>gleaner-obps</code>, <code>gleaner-medin</code>, <code>gleaner-obis</code>, <code>gleaner-oe</code> still exist and often contain <strong>more</strong> documents than the long-named twin or than <code>odis</code> for the same source.</li>
+      <li><strong>Mapping fits the existing Gleaner query layer</strong> (<code>name</code>, <code>description</code>, <code>type</code>, <code>source</code>, <code>jsonld</code>, …) — but <strong>facet source IDs</strong>, <strong>display labels</strong>, <strong>index lists</strong>, and <strong>record routing</strong> in the API must be updated.</li>
+      <li><strong>Graph noise in <code>odis</code>:</strong> Only ~12.6k of 30.5k documents match the app’s primary-type filter; the rest are structural JSON-LD nodes (<code>schema:DataDownload</code>, <code>schema:Place</code>, etc.), similar to the legacy <code>odis_metadata</code> problem.</li>
+      <li><strong>IOOS-only in <code>odis</code>:</strong> ~13.3k documents have <code>source = integrated-ocean-observing-system-ioos-data-catalog</code> with <strong>no</strong> matching <code>gleaner-{slug}</code> index — federated search must use <code>odis</code> (or a new index) to surface them.</li>
+    </ul>
+
+    <h2>2. Cluster overview</h2>
+    <table>
+      <tr><th>Property</th><th>Value</th></tr>
+      <tr><td>URL (configured)</td><td><code>GLEANER_ELASTICSEARCH_URL=http://odis.org:9400</code></td></tr>
+      <tr><td>Cluster name</td><td><code>mvp-gleaner</code></td></tr>
+      <tr><td>Version</td><td>Elasticsearch 8.15.3 (Docker)</td></tr>
+      <tr><td>Authentication</td><td>None observed (open read on probe)</td></tr>
+      <tr><td>Aliases</td><td>None configured on inspected indices</td></tr>
+    </table>
+
+    <h2>3. Index landscape</h2>
+
+    <h3>3.1 Three coexisting layouts</h3>
+    <div class="diagram">┌─────────────────────────────────────────────────────────────────┐
+│  mvp-gleaner @ :9400                                            │
+├─────────────────────────────────────────────────────────────────┤
+│  odis (30,465 docs)                                             │
+│    • Multi-source; source = slug                                │
+│    • IOOS catalog (~13k) only here (no gleaner-ioos slug idx)   │
+│    • Many sources capped ~1k docs in odis vs full per-source idx│
+├─────────────────────────────────────────────────────────────────┤
+│  gleaner-{odiscat-slug} × ~39  (canonical long names)           │
+│    • e.g. gleaner-ocean-best-practices-system-obps              │
+│    • source field = slug (matches index suffix)                 │
+├─────────────────────────────────────────────────────────────────┤
+│  gleaner-{short} × 4  (legacy, still populated)                 │
+│    • gleaner-obps, gleaner-medin, gleaner-obis, gleaner-oe      │
+│    • source field = obps | medin | obis | oe                    │
+│    • Often MORE docs than long-named index (migration partial)  │
+└─────────────────────────────────────────────────────────────────┘</div>
+
+    <h3>3.2 Document counts (selected)</h3>
+    <table>
+      <tr><th>Scope</th><th>All types</th><th>Primary types only*</th></tr>
+      <tr>
+        <td>App default: <code>gleaner-obps,gleaner-medin,gleaner-obis,gleaner-oe</code></td>
+        <td>56,463</td>
+        <td>56,462</td>
+      </tr>
+      <tr>
+        <td><code>odis</code></td>
+        <td>30,465</td>
+        <td>12,587</td>
+      </tr>
+      <tr>
+        <td>All <code>gleaner-*</code> (sum of per-index counts; overlaps possible)</td>
+        <td colspan="2">~159,465</td>
+      </tr>
+    </table>
+    <p style="color: var(--muted); font-size: 0.88rem;">
+      *Primary types = same filter as <code>api/app/search/gleaner/queries.py</code>
+      (<code>Dataset</code>, <code>Person</code>, <code>Organization</code>, … plus <code>Course</code>).
+    </p>
+
+    <h3>3.3 Same source, different stores (examples)</h3>
+    <table>
+      <tr><th>Source slug (<code>source</code> field)</th><th><code>odis</code></th><th><code>gleaner-{short}</code></th><th><code>gleaner-{long}</code></th></tr>
+      <tr><td><code>ocean-best-practices-system-obps</code></td><td>1,000</td><td>2,215 (<code>gleaner-obps</code>)</td><td>2,215</td></tr>
+      <tr><td><code>portal-marine-environmental-data-and-information-network</code></td><td>999</td><td>4,870 (<code>gleaner-medin</code>)</td><td>19,656</td></tr>
+      <tr><td><code>ocean-biodiversity-information-system</code></td><td>963</td><td>5,970 (<code>gleaner-obis</code>)</td><td>5,968</td></tr>
+      <tr><td><code>oceanexpert</code> vs legacy <code>oe</code></td><td>999 (<code>oceanexpert</code>)</td><td>43,408 (<code>gleaner-oe</code>, <code>source=oe</code>)</td><td>5 (<code>gleaner-oceanexpert-a-directory-…</code>)</td></tr>
+    </table>
+    <p>
+      <span class="badge badge-warn">Implication</span>
+      Choosing <code>odis</code> alone under-represents several sources. Choosing only the four legacy indices
+      misses IOOS, AquaDocs, and dozens of new portals. There is <strong>no single index</strong> that is complete
+      today without explicit product rules from the backend team.
+    </p>
+
+    <h3>3.4 All indices by document count</h3>
+    <div class="scroll-table">
+      <table>
+        <tr><th>Index</th><th>docs.count</th></tr>
+        <tr><td>gleaner-oe</td><td>43,408</td></tr>
+        <tr><td>gleaner-aquadocs</td><td>36,986</td></tr>
+        <tr><td>gleaner-portal-marine-environmental-data-and-information-network</td><td>19,656</td></tr>
+        <tr><td>gleaner-catalogue-nodc-spanish-institute-of-oceanography-ieo-csic</td><td>7,471</td></tr>
+        <tr><td>gleaner-research-data-australia</td><td>6,471</td></tr>
+        <tr><td>gleaner-obis / gleaner-ocean-biodiversity-information-system</td><td>~5,970 each</td></tr>
+        <tr><td>gleaner-european-directory-of-marine-organisations</td><td>5,236</td></tr>
+        <tr><td>gleaner-medin</td><td>4,870</td></tr>
+        <tr><td><strong>odis</strong></td><td><strong>30,465</strong></td></tr>
+        <tr><td colspan="2" style="color: var(--muted);">… plus 35 additional <code>gleaner-*</code> indices (see cluster <code>_cat/indices</code>)</td></tr>
+      </table>
+    </div>
+
+    <h2>4. Mapping and document model</h2>
+
+    <h3>4.1 Index mapping (identical on <code>odis</code>, <code>gleaner-obps</code>, long-named indices)</h3>
+    <pre>{
+  "dynamic": "true",
+  "properties": {
+    "id":           { "type": "keyword" },
+    "name":         { "type": "text", "fields": { "raw": { "type": "keyword", "ignore_above": 512 } } },
+    "description":  { "type": "text" },
+    "keywords":     { "type": "text", "fields": { "raw": { "type": "keyword" } } },
+    "type":         { "type": "keyword" },          // often an array; mixed PascalCase + schema: prefix
+    "url":          { "type": "keyword", "ignore_above": 2048 },
+    "source":       { "type": "keyword" },          // slug OR legacy short code
+    "source_url":   { "type": "keyword", "ignore_above": 2048 },
+    "graph":        { "type": "keyword" },
+    "s3_key":       { "type": "keyword" },
+    "jsonld":       { "type": "object", "enabled": false }  // full JSON-LD; spatial extracted at read time
+  }
+}</pre>
+
+    <h3>4.2 Sample summoned document (<code>odis</code>)</h3>
+    <ul>
+      <li><code>id</code>: OAI or URL identifier (also ES <code>_id</code>)</li>
+      <li><code>source</code>: <code>ocean-best-practices-system-obps</code></li>
+      <li><code>graph</code>: <code>urn:odis:ocean-best-practices-system-obps</code></li>
+      <li><code>s3_key</code>: path under <code>summoned/{slug}/…json</code></li>
+      <li><code>type</code>: e.g. <code>["CreativeWork"]</code></li>
+    </ul>
+
+    <h3>4.3 Type distribution in <code>odis</code> (why filters matter)</h3>
+    <table>
+      <tr><th><code>type</code> (top)</th><th>Count</th></tr>
+      <tr><td>Dataset</td><td>6,439</td></tr>
+      <tr><td>schema:DataDownload</td><td>4,863</td></tr>
+      <tr><td>CreativeWork</td><td>2,001</td></tr>
+      <tr><td>schema:ContactPoint / schema:Place / schema:GeoShape</td><td>~1,880 each</td></tr>
+      <tr><td>Event, Organization, ResearchProject, …</td><td>varies</td></tr>
+    </table>
+    <p>
+      The Gleaner backend already applies a <code>terms</code> filter on <code>type</code> for primary record types.
+      That remains necessary for <code>odis</code>. Consider tightening to match harvest intent (exclude
+      <code>schema:DataDownload</code>, etc.) if the pipeline does not split graphs before index time.
+    </p>
+
+    <h2>5. How the search app works today</h2>
+
+    <table>
+      <tr><th>Component</th><th>Current behavior</th><th>Fit with new cluster</th></tr>
+      <tr>
+        <td><code>api/app/config.py</code></td>
+        <td><code>gleaner_indices</code> empty → four default indices</td>
+        <td><span class="badge badge-bad">Mismatch</span> Ignores <code>odis</code> and 41+ sources</td>
+      </tr>
+      <tr>
+        <td><code>api/app/search/gleaner/ids.py</code></td>
+        <td><code>GLEANER_SOURCES</code>: obps, medin, obis, oe only</td>
+        <td><span class="badge badge-bad">Mismatch</span> ~35+ slugs have no display name</td>
+      </tr>
+      <tr>
+        <td><code>source_from_index()</code></td>
+        <td>Strips <code>gleaner-</code> prefix for facet id</td>
+        <td><span class="badge badge-warn">Partial</span> Long suffix ≠ catalogue slug semantics; prefer <code>_source.source</code></td>
+      </tr>
+      <tr>
+        <td><code>encode_record_id(source, id)</code></td>
+        <td><code>gleaner:obis:…</code></td>
+        <td><span class="badge badge-warn">Change</span> New docs need <code>gleaner:ocean-biodiversity-information-system:…</code></td>
+      </tr>
+      <tr>
+        <td><code>get_record()</code></td>
+        <td>Resolves index via <code>index_for_source(short)</code></td>
+        <td><span class="badge badge-bad">Breaks</span> Slug <code>portal-marine-…</code> → wrong index name</td>
+      </tr>
+      <tr>
+        <td><code>build_search_body()</code></td>
+        <td>multi_match on name/description/keywords; aggs on <code>type</code>, <code>source</code></td>
+        <td><span class="badge badge-ok">OK</span> Mapping unchanged</td>
+      </tr>
+      <tr>
+        <td>UI (<code>web/</code>)</td>
+        <td>Backend switcher; source labels from API</td>
+        <td><span class="badge badge-ok">OK</span> Needs richer <code>source.name</code> from API/catalogue</td>
+      </tr>
+    </table>
+
+    <h2>6. Recommended adaptations</h2>
+
+    <div class="priority p1">
+      <h3>P1 — Decide corpus strategy (with backend owner)</h3>
+      <ol>
+        <li><strong>Federated:</strong> Query single index <code>odis</code> for cross-source search (includes IOOS). Accept per-source caps until pipeline fills <code>odis</code> completely.</li>
+        <li><strong>Full per-source:</strong> Query <code>gleaner-*</code> with dynamic index list (exclude legacy shorts once long indices are authoritative).</li>
+        <li><strong>Hybrid:</strong> <code>odis</code> for global search + on-demand deep index for record detail when <code>s3_key</code> / slug routes to a per-source index.</li>
+      </ol>
+    </div>
+
+    <div class="priority p1">
+      <h3>P1 — Configuration</h3>
+      <p>Add explicit mode instead of implicit four-index default, for example:</p>
+      <pre># Option A — federated
+SEARCH_BACKEND=gleaner
+GLEANER_ELASTICSEARCH_URL=http://odis.org:9400
+GLEANER_INDICES=odis
+
+# Option B — all summoned sources (exclude legacy duplicates carefully)
+GLEANER_INDICES=gleaner-*
+
+# Option C — transitional (current behavior, incomplete)
+GLEANER_INDICES=gleaner-obps,gleaner-medin,gleaner-obis,gleaner-oe</pre>
+      <p>Implement <code>gleaner-*</code> wildcard or startup discovery via <code>_cat/indices/gleaner-*</code> with a denylist for legacy short names when long indices are ready.</p>
+    </div>
+
+    <div class="priority p2">
+      <h3>P2 — Source registry and record routing</h3>
+      <ul>
+        <li>Replace hardcoded <code>GLEANER_SOURCES</code> with labels from the <code>catalogue</code> index (main ES backend) keyed by slug, or a static JSON synced from ODISCat.</li>
+        <li><code>index_for_source(slug)</code> → <code>gleaner-{slug}</code> (with legacy alias map: <code>obps</code> → <code>ocean-best-practices-system-obps</code> until data migration finishes).</li>
+        <li><code>get_record</code>: try <code>gleaner-{slug}</code> first; fallback to <code>odis</code> with <code>routing</code> or <code>ids</code> query on <code>id</code> + <code>source</code> if per-source index missing (IOOS case).</li>
+        <li>Store <code>_index</code> in encoded record id or resolve via search-by-id if duplicates exist across indices.</li>
+      </ul>
+    </div>
+
+    <div class="priority p2">
+      <h3>P2 — Facets and filters</h3>
+      <ul>
+        <li>Source facet buckets will return slugs; UI already supports <code>sourceLabel(id, name)</code> when <code>name</code> is populated.</li>
+        <li><code>?sources=obis</code> will not match new documents; migrate API to accept slugs or map legacy query params.</li>
+        <li>Consider a <code>terms</code> aggregation size &gt; 50 (currently 50) — cluster has ~39 sources in <code>odis</code> alone.</li>
+      </ul>
+    </div>
+
+    <div class="priority p2">
+      <h3>P3 — Health check</h3>
+      <p>
+        <code>GleanerBackend.health()</code> only checks <code>indices.exists</code> on the first configured index.
+        For <code>odis</code> or wildcards, probe cluster health or <code>HEAD /odis</code> explicitly.
+      </p>
+    </div>
+
+    <div class="priority p2">
+      <h3>P3 — Type filter alignment</h3>
+      <ul>
+        <li>Extend <code>_type_values_for_filter</code> if harvest emits <code>schema:Dataset</code> on the same documents as primary hits (already partially handled via <code>raw_types_for_filter</code>).</li>
+        <li>Coordinate with pipeline to index <strong>searchable profiles only</strong> into <code>odis</code> (aligns with <a href="indexing-strategy.md">indexing-strategy.md</a>).</li>
+      </ul>
+    </div>
+
+    <h2>7. Suggested target architecture</h2>
+    <div class="diagram">Harvester → per-source JSON-LD → S3 (s3_key)
+                ↓
+        ┌───────┴───────┐
+        ▼               ▼
+  gleaner-{slug}      odis  (search-optimized subset / federated)
+        │               │
+        └───────┬───────┘
+                ▼
+     odis-ui API (gleaner backend)
+       • configurable index set
+       • slug-aware record IDs + catalogue labels
+       • primary-type query filter
+                ▼
+           Svelte UI</div>
+
+    <h2>8. Open questions for the backend team</h2>
+    <ol>
+      <li>Is <code>odis</code> intended to become the <strong>only</strong> search index, with per-source indices for ops/reindex only?</li>
+      <li>Why are ~1k documents per source present in <code>odis</code> while per-source indices hold more (sampling, staging, or bug)?</li>
+      <li>When will legacy <code>gleaner-oe</code> / <code>source=oe</code> migrate to <code>oceanexpert</code> slug consistently?</li>
+      <li>Should graph fragments be excluded from <code>odis</code> at ingest (recommended in project docs)?</li>
+      <li>Will IOOS remain <code>odis</code>-only or gain <code>gleaner-integrated-ocean-observing-system-ioos-data-catalog</code>?</li>
+      <li>Authentication / TLS plan for production exposure of :9400?</li>
+    </ol>
+
+    <h2>9. Verification checklist</h2>
+    <ul>
+      <li><code>curl -s http://odis.org:9400/_cat/indices?v</code> — index list and counts</li>
+      <li><code>curl -s http://odis.org:9400/odis/_mapping</code> — schema</li>
+      <li>Run API with <code>GLEANER_INDICES=odis</code> and compare totals to UI expectations</li>
+      <li>Spot-check record fetch for slug-based id: <code>GET /api/v1/records/gleaner:ocean-biodiversity-information-system:…</code></li>
+      <li>Run <code>pytest api/tests/test_gleaner.py</code> after updating fixtures for slug-based sources</li>
+    </ul>
+
+    <footer>
+      Report generated from live queries against <code>http://odis.org:9400</code> and static review of
+      <code>odis-ui</code> (<code>api/app/search/gleaner/*</code>, <code>api/app/config.py</code>).
+      Related internal docs: <code>docs/indexing-strategy.md</code>, <code>docs/data-sources-analysis.md</code>.
+    </footer>
+  </main>
+</body>
+</html>

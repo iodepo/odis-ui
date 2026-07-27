@@ -12,7 +12,7 @@ async def test_list_backends(client: AsyncClient, fake_backend: FakeSearchBacken
     assert payload["default"] == "elasticsearch"
     assert len(payload["backends"]) == 2
     ids = {item["id"] for item in payload["backends"]}
-    assert ids == {"elasticsearch", "gleaner"}
+    assert ids == {"elasticsearch", "legacy"}
     assert all(item["health"]["status"] == "ok" for item in payload["backends"])
 
 
@@ -22,7 +22,7 @@ async def test_search_respects_backend_header(
 ) -> None:
     response = await client.get(
         "/api/v1/search",
-        headers={"X-Search-Backend": "gleaner"},
+        headers={"X-Search-Backend": "legacy"},
     )
     assert response.status_code == 200
     assert response.json()["total"] == 1

@@ -125,3 +125,45 @@ def test_extract_obis_polygon_as_bounding_box() -> None:
 def test_extract_returns_none_without_data() -> None:
     assert extract_spatial_extent({}) is None
     assert extract_spatial_extent({"data": {"name": {"value": "No extent"}}}) is None
+
+
+def test_extract_from_summoned_jsonld_polygon() -> None:
+    """Gleaner `odis` docs store plain GeoShape polygons under `jsonld`."""
+    extent = extract_spatial_extent(
+        {
+            "jsonld": {
+                "spatialCoverage": {
+                    "@type": "Place",
+                    "geo": {
+                        "@type": "GeoShape",
+                        "polygon": (
+                            "17.6361 -93.823, 17.6361 -64.4314, "
+                            "27.9224 -64.4314, 27.9224 -93.823, 17.6361 -93.823"
+                        ),
+                    },
+                }
+            }
+        }
+    )
+    assert extent is not None
+    assert len(extent.boxes) == 1
+    box = extent.boxes[0]
+    assert box.south == 17.6361
+    assert box.west == -93.823
+    assert box.north == 27.9224
+    assert box.east == -64.4314
+
+
+def test_extract_work_location_point() -> None:
+    extent = extract_spatial_extent(
+        {
+            "jsonld": {
+                "workLocation": {
+                    "geo": {"latitude": -14.2, "longitude": -51.9},
+                }
+            }
+        }
+    )
+    assert extent is not None
+    assert extent.boxes == []
+    assert extent.points == [GeoPoint(lat=-14.2, lon=-51.9)]

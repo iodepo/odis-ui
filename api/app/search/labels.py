@@ -1,6 +1,6 @@
 BACKEND_LABELS: dict[str, str] = {
     "elasticsearch": "ODIS",
-    "gleaner": "Gleaner",
+    "legacy": "Legacy",
 }
 
 
