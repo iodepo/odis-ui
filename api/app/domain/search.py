@@ -91,6 +91,10 @@ class SearchQuery(BaseModel):
     sort: str = Field(default="relevance", description="Sort order: relevance or title")
     page: int = Field(default=1, ge=1)
     size: int = Field(default=20, ge=1, le=50)
+    include_graph_fragments: bool = Field(
+        default=False,
+        description="When true (ODIS backend), include JSON-LD graph fragment nodes in results",
+    )
 
 
 class SearchResponse(BaseModel):

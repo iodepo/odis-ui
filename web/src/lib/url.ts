@@ -1,4 +1,5 @@
 import type { SearchParams } from "./api";
+import { parseGraphFragmentsParam } from "./searchSettings";
 
 export function parseSearchParams(url: URL): SearchParams {
   const params: SearchParams = {};
@@ -14,6 +15,11 @@ export function parseSearchParams(url: URL): SearchParams {
   const page = url.searchParams.get("page");
   if (page) params.page = Number(page);
 
+  const graphFragments = url.searchParams.get("include_graph_fragments");
+  if (graphFragments !== null) {
+    params.include_graph_fragments = parseGraphFragmentsParam(graphFragments);
+  }
+
   return params;
 }
 
@@ -25,6 +31,9 @@ export function buildSearchUrl(params: SearchParams): string {
   params.types?.forEach((type) => url.searchParams.append("types", type));
   params.source?.forEach((source) => url.searchParams.append("source", source));
   if (params.page && params.page > 1) url.searchParams.set("page", String(params.page));
+  if (params.include_graph_fragments) {
+    url.searchParams.set("include_graph_fragments", "1");
+  }
 
   return `${url.pathname}${url.search}`;
 }

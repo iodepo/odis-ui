@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import FacetPanel from "./lib/FacetPanel.svelte";
   import BackendSwitcher from "./lib/BackendSwitcher.svelte";
+  import SearchSettings from "./lib/SearchSettings.svelte";
   import SpatialExtentMap from "./lib/SpatialExtentMap.svelte";
   import TypeBadge from "./lib/TypeBadge.svelte";
   import TypePillBar from "./lib/TypePillBar.svelte";
@@ -19,6 +20,10 @@
   } from "./lib/api";
   import { formatNumber } from "./lib/format";
   import { buildSearchUrl, parseSearchParams, toggleValue } from "./lib/url";
+  import {
+    readGraphFragmentsPreference,
+    writeGraphFragmentsPreference,
+  } from "./lib/searchSettings";
   import "./app.css";
 
   let backends = $state<BackendInfo[]>([]);
@@ -37,13 +42,15 @@
   let scrollObserver: IntersectionObserver | undefined = $state();
   let typeOptions = $state<string[]>([]);
   let sourceOptions = $state<{ id: string; name?: string | null }[]>([]);
+  let includeGraphFragments = $state(readGraphFragmentsPreference());
+  let settingsOpen = $state(false);
+
+  const odisBackendActive = $derived(selectedBackend === "elasticsearch");
 
   const hasMore = $derived(results !== null && results.items.length < results.total);
 
   function updateTypeOptions(facets: SearchFacets) {
-    const order = facets.types.map((bucket) => bucket.value);
-    const known = new Set([...typeOptions, ...order]);
-    typeOptions = [...order, ...[...known].filter((value) => !order.includes(value))];
+    typeOptions = facets.types.map((bucket) => bucket.value);
   }
 
   function updateSourceOptions(facets: SearchFacets) {
@@ -61,12 +68,16 @@
   }
 
   function currentParams(): SearchParams {
-    return {
+    const params: SearchParams = {
       q: query || undefined,
       types: selectedTypes.length ? selectedTypes : undefined,
       source: selectedSources.length ? selectedSources : undefined,
       page,
     };
+    if (odisBackendActive && includeGraphFragments) {
+      params.include_graph_fragments = true;
+    }
+    return params;
   }
 
   async function runSearch(pushUrl = true, append = false) {
@@ -159,6 +170,10 @@
     selectedTypes = params.types ?? [];
     selectedSources = params.source ?? [];
     page = params.page ?? 1;
+    if (url.searchParams.has("include_graph_fragments")) {
+      includeGraphFragments = Boolean(params.include_graph_fragments);
+      writeGraphFragmentsPreference(includeGraphFragments);
+    }
   }
 
   onMount(() => {
@@ -174,16 +189,10 @@
       { rootMargin: "240px" },
     );
 
-    // Land on the configured default (first) backend and search immediately.
-    // Health probes update the switcher in parallel; re-search only on fallback.
-    selectedBackend = null;
-    setActiveBackend(null);
-    void runSearch(false);
+    // Resolve default backend, then search once with the correct X-Search-Backend header.
     void (async () => {
-      const switched = await refreshBackends();
-      if (switched) {
-        await runSearch(false);
-      }
+      await refreshBackends();
+      await runSearch(false);
     })();
 
     const onPopState = () => {
@@ -263,6 +272,15 @@
     await runSearch();
   }
 
+  async function handleGraphFragmentsChange(enabled: boolean) {
+    includeGraphFragments = enabled;
+    writeGraphFragmentsPreference(enabled);
+    selectedTypes = [];
+    typeOptions = [];
+    page = 1;
+    await runSearch();
+  }
+
   async function handleHomeClick(event: MouseEvent) {
     event.preventDefault();
     query = "";
@@ -279,6 +297,35 @@
     <div class="page-header-top">
       <h1><a href="/" class="site-title" onclick={handleHomeClick}>ODIS Search</a></h1>
       <div class="page-header-actions">
+        {#if odisBackendActive}
+          <a
+            href="#settings"
+            class="github-link"
+            aria-label="Search settings"
+            title="Search settings"
+            onclick={(event) => {
+              event.preventDefault();
+              settingsOpen = true;
+            }}
+          >
+            <svg
+              class="settings-icon"
+              viewBox="0 0 64 64"
+              width="20"
+              height="20"
+              xmlns="http://www.w3.org/2000/svg"
+              stroke-width="3"
+              stroke="currentColor"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M45,14.67l-2.76,2a1,1,0,0,1-1,.11L37.65,15.3a1,1,0,0,1-.61-.76l-.66-3.77a1,1,0,0,0-1-.84H30.52a1,1,0,0,0-1,.77l-.93,3.72a1,1,0,0,1-.53.65l-3.3,1.66a1,1,0,0,1-1-.08l-3-2.13a1,1,0,0,0-1.31.12l-3.65,3.74a1,1,0,0,0-.13,1.26l1.87,2.88a1,1,0,0,1,.1.89L16.34,27a1,1,0,0,1-.68.63l-3.85,1.06a1,1,0,0,0-.74,1v4.74a1,1,0,0,0,.8,1l3.9.8a1,1,0,0,1,.72.57l1.42,3.15a1,1,0,0,1-.05.92l-2.13,3.63a1,1,0,0,0,.17,1.24L19.32,49a1,1,0,0,0,1.29.09L23.49,47a1,1,0,0,1,1-.1l3.74,1.67a1,1,0,0,1,.59.75l.66,3.79a1,1,0,0,0,1,.84h4.89a1,1,0,0,0,1-.86l.58-4a1,1,0,0,1,.58-.77l3.58-1.62a1,1,0,0,1,1,.09l3.14,2.12a1,1,0,0,0,1.3-.15L50,45.06a1,1,0,0,0,.09-1.27l-2.08-3a1,1,0,0,1-.09-1l1.48-3.43a1,1,0,0,1,.71-.59L53.77,35a1,1,0,0,0,.8-1V29.42a1,1,0,0,0-.8-1l-3.72-.78a1,1,0,0,1-.73-.62l-1.45-3.65a1,1,0,0,1,.11-.94l2.15-3.14A1,1,0,0,0,50,18l-3.71-3.25A1,1,0,0,0,45,14.67Z"
+              />
+              <circle cx="32.82" cy="31.94" r="9.94" />
+            </svg>
+          </a>
+        {/if}
         <BackendSwitcher
           {backends}
           selectedId={selectedBackend}
@@ -410,3 +457,11 @@
     </section>
   </div>
 </main>
+
+<SearchSettings
+  open={settingsOpen}
+  {includeGraphFragments}
+  disabled={!odisBackendActive}
+  onClose={() => (settingsOpen = false)}
+  onGraphFragmentsChange={handleGraphFragmentsChange}
+/>

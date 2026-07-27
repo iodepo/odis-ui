@@ -31,6 +31,12 @@ async def search(
     sort: Annotated[SortOrder, Query(description="Sort order")] = SortOrder.RELEVANCE,
     page: Annotated[int, Query(ge=1, description="Page number")] = 1,
     size: Annotated[int, Query(ge=1, le=50, description="Results per page")] = 20,
+    include_graph_fragments: Annotated[
+        bool,
+        Query(
+            description="Include JSON-LD graph fragment nodes (ODIS / `odis` index only)",
+        ),
+    ] = False,
 ) -> SearchResponse:
     """Search records in the odis_metadata index with optional type and source filters."""
     query = SearchQuery(
@@ -40,5 +46,6 @@ async def search(
         sort=sort.value,
         page=page,
         size=size,
+        include_graph_fragments=include_graph_fragments,
     )
     return await backend.search(query)

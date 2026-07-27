@@ -1,9 +1,15 @@
 export function formatTypeLabel(value: string): string {
-  if (value === "creativework") return "Creative Work";
-  if (value === "researchproject") return "Research Project";
-  if (value === "boattrip") return "Cruise";
-  if (value === "course") return "Course";
-  return value.charAt(0).toUpperCase() + value.slice(1);
+  const bare = value.replace(/^schema:/, "").replace(/^sc:/, "");
+  const key = bare.toLowerCase();
+  if (key === "creativework") return "Creative Work";
+  if (key === "researchproject") return "Research Project";
+  if (key === "boattrip") return "Cruise";
+  if (key === "course") return "Course";
+  if (key === "datadownload") return "Data Download";
+  if (key === "contactpoint") return "Contact Point";
+  if (key === "geoshape") return "Geo Shape";
+  if (key === "datacatalog") return "Data Catalog";
+  return bare.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2");
 }
 
 export function sourceLabel(id: string, name?: string | null): string {

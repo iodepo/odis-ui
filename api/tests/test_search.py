@@ -22,3 +22,13 @@ async def test_search_returns_results(client: AsyncClient, fake_backend: FakeSea
 async def test_search_validates_size_max(client: AsyncClient) -> None:
     response = await client.get("/api/v1/search", params={"size": 100})
     assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_search_include_graph_fragments_param(
+    client: AsyncClient, fake_backend: FakeSearchBackend
+) -> None:
+    response = await client.get("/api/v1/search", params={"include_graph_fragments": True})
+    assert response.status_code == 200
+    assert fake_backend.last_query is not None
+    assert fake_backend.last_query.include_graph_fragments is True

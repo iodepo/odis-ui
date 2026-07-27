@@ -69,6 +69,10 @@ main {
   line-height: 0;
 }
 
+.settings-icon {
+  display: block;
+}
+
 .site-title {
   color: inherit;
   text-decoration: none;
@@ -293,4 +297,70 @@ h1 {
 
 .error {
   color: #a3401f;
+}
+
+.search-settings-dialog {
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 0;
+  max-width: 28rem;
+  box-shadow: 0 12px 40px rgba(18, 35, 43, 0.18);
+}
+
+.search-settings-dialog::backdrop {
+  background: rgba(18, 35, 43, 0.35);
+}
+
+.search-settings-panel {
+  margin: 0;
+  padding: 1rem 1.1rem 1.1rem;
+}
+
+.search-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.search-settings-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.search-settings-close {
+  border: 0;
+  background: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.search-settings-note {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.search-settings-option {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.search-settings-option input {
+  margin-top: 0.2rem;
+}
+
+.search-settings-hint {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  font-weight: normal;
 }

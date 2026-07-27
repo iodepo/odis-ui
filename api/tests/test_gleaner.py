@@ -65,3 +65,26 @@ def test_gleaner_search_body_filters_and_aggs() -> None:
     assert "sources" in body["aggs"]
     assert body["query"]["bool"]["must"][0]["multi_match"]["query"] == "coral"
     assert body["track_total_hits"] is True
+
+
+def test_gleaner_search_body_omits_primary_type_filter_when_graph_fragments_enabled() -> None:
+    body = build_search_body(SearchQuery(include_graph_fragments=True))
+    filters = body["query"]["bool"].get("filter", [])
+    assert filters == []
+
+
+def test_gleaner_search_body_primary_type_filter_by_default() -> None:
+    body = build_search_body(SearchQuery())
+    filters = body["query"]["bool"]["filter"]
+    assert any("terms" in clause and "type" in clause["terms"] for clause in filters)
+
+
+def test_gleaner_type_filter_preserves_pascal_case() -> None:
+    body = build_search_body(SearchQuery(types=["HowToStep"], include_graph_fragments=True))
+    assert body["post_filter"] == {"terms": {"type": ["HowToStep", "schema:HowToStep"]}}
+
+
+def test_gleaner_type_filter_lowercase_dataset() -> None:
+    body = build_search_body(SearchQuery(types=["dataset"], include_graph_fragments=True))
+    type_terms = body["post_filter"]["terms"]["type"]
+    assert "Dataset" in type_terms

@@ -36,23 +36,42 @@ SEARCH_SOURCE_FIELDS = [
 ]
 
 
-def _type_values_for_filter(normalized: list[str]) -> list[str]:
+def _gleaner_type_match_values(item: str) -> list[str]:
+    """Map UI / facet type ids to values stored on the Gleaner `type` keyword field."""
+    if item != item.lower() or item.startswith("schema:") or item.startswith("sc:"):
+        bare = item.removeprefix("schema:").removeprefix("sc:")
+        candidates = [item, bare, f"schema:{bare}"]
+        return list(dict.fromkeys(candidates))
+
+    values: list[str] = []
+    for raw in raw_types_for_filter([item.lower()]):
+        bare = raw.removeprefix("schema:")
+        values.append(bare)
+        if raw.startswith("schema:"):
+            values.append(raw)
+        elif bare != raw:
+            values.append(f"schema:{bare}")
+    return list(dict.fromkeys(values))
+
+
+def _type_values_for_filter(types: list[str]) -> list[str]:
     """Gleaner stores PascalCase schema.org types on keyword field `type`."""
     values: list[str] = []
     seen: set[str] = set()
-    for raw in raw_types_for_filter(normalized):
-        value = raw.removeprefix("schema:")
-        if value not in seen:
-            seen.add(value)
-            values.append(value)
+    for item in types:
+        for candidate in _gleaner_type_match_values(item):
+            if candidate not in seen:
+                seen.add(candidate)
+                values.append(candidate)
     return values
 
 
 def _base_filters(query: SearchQuery) -> list[dict[str, Any]]:
-    filters: list[dict[str, Any]] = [
+    if query.include_graph_fragments:
+        return []
+    return [
         {"terms": {"type": _type_values_for_filter(list(GLEANER_PRIMARY_TYPES))}},
     ]
-    return filters
 
 
 def _type_facet_filters(query: SearchQuery) -> list[dict[str, Any]]:
@@ -65,14 +84,14 @@ def _type_facet_filters(query: SearchQuery) -> list[dict[str, Any]]:
 def _source_facet_filters(query: SearchQuery) -> list[dict[str, Any]]:
     filters = _base_filters(query)
     if query.types:
-        filters.append({"terms": {"type": _type_values_for_filter([t.lower() for t in query.types])}})
+        filters.append({"terms": {"type": _type_values_for_filter(query.types)}})
     return filters
 
 
 def _user_post_filter(query: SearchQuery) -> dict[str, Any] | None:
     clauses: list[dict[str, Any]] = []
     if query.types:
-        clauses.append({"terms": {"type": _type_values_for_filter([t.lower() for t in query.types])}})
+        clauses.append({"terms": {"type": _type_values_for_filter(query.types)}})
     if query.sources:
         clauses.append({"terms": {"source": query.sources}})
     if not clauses:
@@ -263,7 +282,7 @@ def map_search_response(
 
     aggs = raw.get("aggregations", {})
     type_facets = [
-        FacetBucket(value=str(bucket["key"]).lower(), count=bucket["doc_count"])
+        FacetBucket(value=str(bucket["key"]), count=bucket["doc_count"])
         for bucket in aggs.get("types", {}).get("buckets", {}).get("buckets", [])
         if bucket.get("key")
     ]

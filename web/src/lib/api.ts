@@ -86,6 +86,7 @@ export interface SearchParams {
   sort?: "relevance" | "title";
   page?: number;
   size?: number;
+  include_graph_fragments?: boolean;
 }
 
 let activeBackend: string | null = localStorage.getItem(BACKEND_STORAGE_KEY);
@@ -171,5 +172,6 @@ export function search(params: SearchParams = {}): Promise<SearchResponse> {
   if (params.sort) query.sort = params.sort;
   if (params.page) query.page = String(params.page);
   if (params.size) query.size = String(params.size);
+  if (params.include_graph_fragments) query.include_graph_fragments = "true";
   return fetchJson<SearchResponse>("/search", query);
 }
