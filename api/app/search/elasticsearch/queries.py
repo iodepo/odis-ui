@@ -143,6 +143,7 @@ def build_search_body(query: SearchQuery) -> dict[str, Any]:
             ),
         },
         "track_scores": True,
+        "track_total_hits": True,
     }
 
     post_filter = _user_post_filter(query)

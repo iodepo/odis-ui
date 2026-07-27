@@ -118,6 +118,8 @@ def build_search_body(query: SearchQuery) -> dict[str, Any]:
             "sources": _filter_agg(_source_facet_filters(query), "source", 50),
         },
         "track_scores": True,
+        # Exact total (default ES cap is 10_000 with relation=gte). Cheap on the `odis` corpus.
+        "track_total_hits": True,
     }
 
     post_filter = _user_post_filter(query)

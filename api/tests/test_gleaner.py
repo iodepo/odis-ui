@@ -64,3 +64,4 @@ def test_gleaner_search_body_filters_and_aggs() -> None:
     assert "types" in body["aggs"]
     assert "sources" in body["aggs"]
     assert body["query"]["bool"]["must"][0]["multi_match"]["query"] == "coral"
+    assert body["track_total_hits"] is True
