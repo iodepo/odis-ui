@@ -40,6 +40,42 @@ main {
   padding: 2rem 1.5rem;
 }
 
+.dev-banner {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.65rem;
+  padding: 0.6rem 1.5rem;
+  background: var(--training-tint);
+  border-bottom: 1px solid #eddcb4;
+  color: #6f4a08;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.dev-banner p {
+  margin: 0;
+}
+
+.dev-banner-tag {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  background: var(--training);
+  color: #fff;
+  text-transform: lowercase;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.dev-banner a {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
 .page-header {
   margin-bottom: 1.5rem;
 }

@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import FacetPanel from "./lib/FacetPanel.svelte";
   import BackendSwitcher from "./lib/BackendSwitcher.svelte";
+  import DevBanner from "./lib/DevBanner.svelte";
   import SearchSettings from "./lib/SearchSettings.svelte";
   import SpatialExtentMap from "./lib/SpatialExtentMap.svelte";
   import TypeBadge from "./lib/TypeBadge.svelte";
@@ -291,6 +292,8 @@
     await runSearch();
   }
 </script>
+
+<DevBanner />
 
 <main>
   <header class="page-header">
