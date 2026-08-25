@@ -92,6 +92,21 @@ main {
   margin: 0;
 }
 
+.page-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-width: 0;
+}
+
+/* Sized by height so the logo's fine print stays legible; 1024x449 source. */
+.site-logo {
+  height: 44px;
+  width: auto;
+  display: block;
+  flex-shrink: 0;
+}
+
 .page-header-actions {
   display: flex;
   align-items: center;
@@ -128,6 +143,14 @@ main {
 @media (max-width: 800px) {
   .layout {
     grid-template-columns: 1fr;
+  }
+
+  .page-header-top {
+    flex-wrap: wrap;
+  }
+
+  .site-logo {
+    height: 36px;
   }
 }
 

@@ -298,7 +298,16 @@
 <main>
   <header class="page-header">
     <div class="page-header-top">
-      <h1><a href="/" class="site-title" onclick={handleHomeClick}>ODIS Search</a></h1>
+      <div class="page-header-brand">
+        <img
+          class="site-logo"
+          src="/iode-unesco-logo-1024x449.png"
+          width="1024"
+          height="449"
+          alt="UNESCO IOC / International Oceanographic Data and Information Exchange (IODE)"
+        />
+        <h1><a href="/" class="site-title" onclick={handleHomeClick}>ODIS Search</a></h1>
+      </div>
       <div class="page-header-actions">
         {#if odisBackendActive}
           <a
