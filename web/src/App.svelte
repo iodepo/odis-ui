@@ -306,7 +306,18 @@
           height="449"
           alt="UNESCO IOC / International Oceanographic Data and Information Exchange (IODE)"
         />
-        <h1><a href="/" class="site-title" onclick={handleHomeClick}>ODIS Search</a></h1>
+        <h1>
+          <a href="/" class="site-title" onclick={handleHomeClick}>
+            <img
+              class="odis-logo"
+              src="/ODIS_logo_cropped.png"
+              width="940"
+              height="390"
+              alt="ODIS"
+            />
+            Search
+          </a>
+        </h1>
       </div>
       <div class="page-header-actions">
         {#if odisBackendActive}

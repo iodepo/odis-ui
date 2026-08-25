@@ -127,6 +127,18 @@ main {
 .site-title {
   color: inherit;
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+}
+
+/* Wordmark stands in for the word "ODIS", so it is sized in em to track the
+   title's font size. 1.1em lands the "DIS" letterforms at roughly the cap
+   height of "Search"; the circular mark overhangs above and below by design. */
+.odis-logo {
+  height: 1.1em;
+  width: auto;
+  display: block;
 }
 
 .layout {
