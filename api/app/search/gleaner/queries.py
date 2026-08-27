@@ -16,7 +16,7 @@ from app.domain.search import (
     SourceFacetBucket,
     SourceRef,
 )
-from app.search.elasticsearch.mappings import raw_types_for_filter
+from app.search.elasticsearch.mappings import pascal_type, raw_types_for_filter
 from app.search.elasticsearch.spatial import extract_spatial_extent
 from app.search.gleaner.ids import encode_record_id
 
@@ -173,9 +173,13 @@ def _as_str_list(value: Any) -> list[str]:
     return [single] if single else []
 
 
+def _strip_type_prefix(value: str) -> str:
+    return value.removeprefix("schema:").removeprefix("sc:")
+
+
 def _normalize_type(raw: Any) -> str | None:
     values = _as_str_list(raw) if not isinstance(raw, str) else [_as_str(raw) or ""]
-    candidates = [v.lower() for v in values if v]
+    candidates = [_strip_type_prefix(v).lower() for v in values if v]
     if not candidates:
         return None
     priority = (
@@ -195,14 +199,27 @@ def _normalize_type(raw: Any) -> str | None:
 
 
 def _display_type(normalized: str | None, raw: Any) -> str:
-    if normalized == "creativework":
-        return "CreativeWork"
-    if normalized == "researchproject":
-        return "ResearchProject"
     if normalized:
-        return normalized.title()
+        return pascal_type(normalized)
     values = _as_str_list(raw)
-    return values[0] if values else "Record"
+    return _strip_type_prefix(values[0]) if values else "Record"
+
+
+def _merge_type_facets(buckets: list[dict[str, Any]]) -> list[FacetBucket]:
+    """Collapse schema.org prefix variants (Dataset vs schema:Dataset) into one facet."""
+    counts: dict[str, int] = {}
+    for bucket in buckets:
+        key = bucket.get("key")
+        if not key:
+            continue
+        canonical = _strip_type_prefix(str(key)).lower()
+        if not canonical:
+            continue
+        counts[canonical] = counts.get(canonical, 0) + int(bucket["doc_count"])
+    return [
+        FacetBucket(value=pascal_type(canonical), count=count)
+        for canonical, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+    ]
 
 
 def _map_highlight(highlight: dict[str, list[str]] | None) -> dict[str, str] | None:
@@ -281,11 +298,9 @@ def map_search_response(
         )
 
     aggs = raw.get("aggregations", {})
-    type_facets = [
-        FacetBucket(value=str(bucket["key"]), count=bucket["doc_count"])
-        for bucket in aggs.get("types", {}).get("buckets", {}).get("buckets", [])
-        if bucket.get("key")
-    ]
+    type_facets = _merge_type_facets(
+        aggs.get("types", {}).get("buckets", {}).get("buckets", [])
+    )
     source_facets = [
         SourceFacetBucket(
             id=str(bucket["key"]),

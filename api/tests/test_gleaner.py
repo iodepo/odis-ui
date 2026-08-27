@@ -1,6 +1,6 @@
 from app.domain.search import SearchQuery
 from app.search.gleaner.ids import decode_record_id, encode_record_id
-from app.search.gleaner.queries import build_search_body, map_document_to_item
+from app.search.gleaner.queries import build_search_body, map_document_to_item, map_search_response
 
 
 def test_encode_decode_roundtrip() -> None:
@@ -88,3 +88,66 @@ def test_gleaner_type_filter_lowercase_dataset() -> None:
     body = build_search_body(SearchQuery(types=["dataset"], include_graph_fragments=True))
     type_terms = body["post_filter"]["terms"]["type"]
     assert "Dataset" in type_terms
+
+
+def test_map_search_response_merges_schema_type_facets() -> None:
+    response = map_search_response(
+        SearchQuery(),
+        {
+            "hits": {"total": {"value": 0}, "hits": []},
+            "aggregations": {
+                "types": {
+                    "buckets": {
+                        "buckets": [
+                            {"key": "Dataset", "doc_count": 10},
+                            {"key": "schema:Dataset", "doc_count": 3},
+                            {"key": "Person", "doc_count": 5},
+                            {"key": "schema:Organization", "doc_count": 2},
+                            {"key": "Organization", "doc_count": 4},
+                            {"key": "ResearchProject", "doc_count": 7},
+                            {"key": "schema:ResearchProject", "doc_count": 1},
+                            {"key": "DataCatalog", "doc_count": 4},
+                            {"key": "schema:DataCatalog", "doc_count": 1},
+                            {"key": "ContactPoint", "doc_count": 2},
+                            {"key": "schema:ContactPoint", "doc_count": 1},
+                            {"key": "DataDownload", "doc_count": 1},
+                            {"key": "schema:DataDownload", "doc_count": 1},
+                            {"key": "Thing", "doc_count": 1},
+                            {"key": "schema:Thing", "doc_count": 2},
+                        ]
+                    }
+                },
+                "sources": {"buckets": {"buckets": []}},
+            },
+        },
+    )
+    by_value = {bucket.value: bucket.count for bucket in response.facets.types}
+    assert by_value == {
+        "Dataset": 13,
+        "ResearchProject": 8,
+        "Organization": 6,
+        "Person": 5,
+        "DataCatalog": 5,
+        "Thing": 3,
+        "ContactPoint": 3,
+        "DataDownload": 2,
+    }
+    assert "schema:Dataset" not in by_value
+    assert [bucket.value for bucket in response.facets.types][:3] == [
+        "Dataset",
+        "ResearchProject",
+        "Organization",
+    ]
+
+
+def test_map_document_strips_schema_type_prefix() -> None:
+    item = map_document_to_item(
+        "https://example.org/ds/1",
+        {
+            "source": "example",
+            "id": "https://example.org/ds/1",
+            "type": ["schema:Dataset"],
+            "name": "Prefixed dataset",
+        },
+    )
+    assert item.type == "Dataset"

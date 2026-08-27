@@ -86,6 +86,11 @@ def _lowercase_to_pascal(normalized: str) -> str:
     return "".join(parts)
 
 
+def pascal_type(normalized: str) -> str:
+    """Rebuild a schema.org-style PascalCase type id from a normalised key."""
+    return _lowercase_to_pascal(normalized)
+
+
 def _raw_type_variants(normalized: str) -> tuple[str, ...]:
     if normalized in PRIMARY_TYPE_VARIANTS:
         return PRIMARY_TYPE_VARIANTS[normalized]
