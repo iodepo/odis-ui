@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import FacetPanel from "./lib/FacetPanel.svelte";
+  import DevBanner from "./lib/DevBanner.svelte";
   import SearchSettings from "./lib/SearchSettings.svelte";
   import SpatialExtentMap from "./lib/SpatialExtentMap.svelte";
   import TypeBadge from "./lib/TypeBadge.svelte";
@@ -225,10 +226,32 @@
   }
 </script>
 
+<DevBanner />
+
 <main>
   <header class="page-header">
     <div class="page-header-top">
-      <h1><a href="/" class="site-title" onclick={handleHomeClick}>ODIS Search</a></h1>
+      <div class="page-header-brand">
+        <img
+          class="site-logo"
+          src="/iode-unesco-logo-1024x449.png"
+          width="1024"
+          height="449"
+          alt="UNESCO IOC / International Oceanographic Data and Information Exchange (IODE)"
+        />
+        <h1>
+          <a href="/" class="site-title" onclick={handleHomeClick}>
+            <img
+              class="odis-logo"
+              src="/ODIS_logo_cropped.png"
+              width="940"
+              height="390"
+              alt="ODIS"
+            />
+            Search
+          </a>
+        </h1>
+      </div>
       <div class="page-header-actions">
         <a
           href="#settings"
