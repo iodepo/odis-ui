@@ -2,7 +2,6 @@
   type Props = {
     open: boolean;
     includeGraphFragments: boolean;
-    disabled?: boolean;
     onClose: () => void;
     onGraphFragmentsChange: (enabled: boolean) => void;
   };
@@ -10,7 +9,6 @@
   let {
     open,
     includeGraphFragments,
-    disabled = false,
     onClose,
     onGraphFragmentsChange,
   }: Props = $props();
@@ -39,13 +37,10 @@
       <button type="submit" class="search-settings-close" aria-label="Close settings">×</button>
     </header>
 
-    <p class="search-settings-note">Applies to the ODIS backend only.</p>
-
     <label class="search-settings-option">
       <input
         type="checkbox"
         checked={includeGraphFragments}
-        {disabled}
         onchange={(event) => onGraphFragmentsChange((event.currentTarget as HTMLInputElement).checked)}
       />
       <span>

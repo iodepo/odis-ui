@@ -1,4 +1,4 @@
-"""Field mappings for the odis_metadata index."""
+"""Shared type / field helpers used by the ODIS (Gleaner) search backend."""
 
 from app.domain.enums import PRIMARY_RECORD_TYPES
 

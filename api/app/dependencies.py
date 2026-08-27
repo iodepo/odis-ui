@@ -17,7 +17,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         default = KNOWN_BACKENDS[0]
     app.state.search_backends = backends
     app.state.default_backend = default
-    # Keep legacy attribute for anything that still expects a single backend.
     app.state.search_backend = backends[default]
     yield
     for backend in backends.values():

@@ -340,12 +340,6 @@ h1 {
   color: var(--ink-soft);
 }
 
-.search-settings-note {
-  margin: 0 0 1rem;
-  font-size: 0.85rem;
-  color: var(--ink-soft);
-}
-
 .search-settings-option {
   display: flex;
   gap: 0.65rem;

@@ -1,9 +1,5 @@
 import pytest
-from httpx import ASGITransport, AsyncClient
-
-from app.domain.search import SearchItem, SearchResponse, SourceRef
-from app.main import app
-from tests.fakes import FakeSearchBackend
+from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
@@ -20,37 +16,3 @@ async def test_get_record_returns_item(client: AsyncClient) -> None:
 async def test_get_record_not_found(client: AsyncClient) -> None:
     response = await client.get("/api/v1/records/missing-id")
     assert response.status_code == 404
-
-
-@pytest.mark.asyncio
-async def test_odis_record_id_routes_without_backend_header() -> None:
-    """Browser 'API record' links omit X-Search-Backend; route by id prefix."""
-    elasticsearch = FakeSearchBackend()
-    legacy = FakeSearchBackend()
-    odis_id = "gleaner:obis:abc"
-    elasticsearch.search_response = SearchResponse(
-        total=1,
-        facets=legacy.search_response.facets,
-        items=[
-            SearchItem(
-                id=odis_id,
-                title="ODIS Dataset",
-                summary=None,
-                type="Dataset",
-                url="https://obis.org/dataset/abc",
-                source=SourceRef(id="obis", name="OBIS"),
-            )
-        ],
-        page=1,
-        size=20,
-    )
-    app.state.search_backends = {"elasticsearch": elasticsearch, "legacy": legacy}
-    app.state.default_backend = "legacy"
-    app.state.search_backend = legacy
-
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get(f"/api/v1/records/{odis_id}")
-
-    assert response.status_code == 200
-    assert response.json()["title"] == "ODIS Dataset"

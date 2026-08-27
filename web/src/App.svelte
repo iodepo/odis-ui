@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import FacetPanel from "./lib/FacetPanel.svelte";
-  import BackendSwitcher from "./lib/BackendSwitcher.svelte";
   import SearchSettings from "./lib/SearchSettings.svelte";
   import SpatialExtentMap from "./lib/SpatialExtentMap.svelte";
   import TypeBadge from "./lib/TypeBadge.svelte";
@@ -9,11 +8,8 @@
   import SummaryText from "./lib/SummaryText.svelte";
   import ActiveFilters from "./lib/ActiveFilters.svelte";
   import {
-    getBackends,
     recordUrl,
     search,
-    setActiveBackend,
-    type BackendInfo,
     type SearchFacets,
     type SearchParams,
     type SearchResponse,
@@ -26,10 +22,6 @@
   } from "./lib/searchSettings";
   import "./app.css";
 
-  let backends = $state<BackendInfo[]>([]);
-  let selectedBackend = $state<string | null>(null);
-  let backendsError: string | null = $state(null);
-  let backendsLoading = $state(false);
   let query = $state("");
   let selectedTypes = $state<string[]>([]);
   let selectedSources = $state<string[]>([]);
@@ -44,8 +36,6 @@
   let sourceOptions = $state<{ id: string; name?: string | null }[]>([]);
   let includeGraphFragments = $state(readGraphFragmentsPreference());
   let settingsOpen = $state(false);
-
-  const odisBackendActive = $derived(selectedBackend === "elasticsearch");
 
   const hasMore = $derived(results !== null && results.items.length < results.total);
 
@@ -74,7 +64,7 @@
       source: selectedSources.length ? selectedSources : undefined,
       page,
     };
-    if (odisBackendActive && includeGraphFragments) {
+    if (includeGraphFragments) {
       params.include_graph_fragments = true;
     }
     return params;
@@ -114,7 +104,6 @@
       } else {
         searchError = e instanceof Error ? e.message : "Search failed";
         results = null;
-        void refreshBackends();
       }
     } finally {
       loading = false;
@@ -126,42 +115,6 @@
     if (!hasMore || loading || loadingMore || searchError) return;
     page += 1;
     await runSearch(false, true);
-  }
-
-  function backendIsAvailable(backend: BackendInfo): boolean {
-    return backend.health.index_reachable && backend.health.status === "ok";
-  }
-
-  async function refreshBackends(): Promise<boolean> {
-    backendsLoading = true;
-    let switched = false;
-    try {
-      const response = await getBackends();
-      backends = response.backends;
-      backendsError = null;
-      const available = response.backends.filter(backendIsAvailable);
-      const availableIds = new Set(available.map((backend) => backend.id));
-      const previous = selectedBackend;
-      const preferredId = response.default || response.backends[0]?.id || null;
-
-      if (!previous || !availableIds.has(previous)) {
-        const fallback =
-          available.find((backend) => backend.id === preferredId) ?? available[0] ?? null;
-        if (fallback) {
-          selectedBackend = fallback.id;
-          setActiveBackend(fallback.id);
-          // Re-search only when the live backend differs from what search already used.
-          const assumed = previous ?? preferredId;
-          switched = Boolean(assumed) && fallback.id !== assumed;
-        }
-      }
-    } catch (e) {
-      backendsError = e instanceof Error ? e.message : "Failed to reach API";
-      backends = [];
-    } finally {
-      backendsLoading = false;
-    }
-    return switched;
   }
 
   function applyFromUrl(url: URL) {
@@ -189,11 +142,7 @@
       { rootMargin: "240px" },
     );
 
-    // Resolve default backend, then search once with the correct X-Search-Backend header.
-    void (async () => {
-      await refreshBackends();
-      await runSearch(false);
-    })();
+    void runSearch(false);
 
     const onPopState = () => {
       applyFromUrl(new URL(window.location.href));
@@ -215,22 +164,6 @@
     observer.observe(node);
     return () => observer.unobserve(node);
   });
-
-  async function handleBackendSelect(backendId: string) {
-    const target = backends.find((backend) => backend.id === backendId);
-    if (!target || !backendIsAvailable(target) || backendId === selectedBackend) return;
-    selectedBackend = backendId;
-    setActiveBackend(backendId);
-    query = "";
-    selectedTypes = [];
-    selectedSources = [];
-    typeOptions = [];
-    sourceOptions = [];
-    page = 1;
-    results = null;
-    searchError = null;
-    await Promise.all([refreshBackends(), runSearch()]);
-  }
 
   async function handleSearch(event: Event) {
     event.preventDefault();
@@ -297,42 +230,33 @@
     <div class="page-header-top">
       <h1><a href="/" class="site-title" onclick={handleHomeClick}>ODIS Search</a></h1>
       <div class="page-header-actions">
-        {#if odisBackendActive}
-          <a
-            href="#settings"
-            class="github-link"
-            aria-label="Search settings"
-            title="Search settings"
-            onclick={(event) => {
-              event.preventDefault();
-              settingsOpen = true;
-            }}
+        <a
+          href="#settings"
+          class="github-link"
+          aria-label="Search settings"
+          title="Search settings"
+          onclick={(event) => {
+            event.preventDefault();
+            settingsOpen = true;
+          }}
+        >
+          <svg
+            class="settings-icon"
+            viewBox="0 0 64 64"
+            width="20"
+            height="20"
+            xmlns="http://www.w3.org/2000/svg"
+            stroke-width="3"
+            stroke="currentColor"
+            fill="none"
+            aria-hidden="true"
           >
-            <svg
-              class="settings-icon"
-              viewBox="0 0 64 64"
-              width="20"
-              height="20"
-              xmlns="http://www.w3.org/2000/svg"
-              stroke-width="3"
-              stroke="currentColor"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M45,14.67l-2.76,2a1,1,0,0,1-1,.11L37.65,15.3a1,1,0,0,1-.61-.76l-.66-3.77a1,1,0,0,0-1-.84H30.52a1,1,0,0,0-1,.77l-.93,3.72a1,1,0,0,1-.53.65l-3.3,1.66a1,1,0,0,1-1-.08l-3-2.13a1,1,0,0,0-1.31.12l-3.65,3.74a1,1,0,0,0-.13,1.26l1.87,2.88a1,1,0,0,1,.1.89L16.34,27a1,1,0,0,1-.68.63l-3.85,1.06a1,1,0,0,0-.74,1v4.74a1,1,0,0,0,.8,1l3.9.8a1,1,0,0,1,.72.57l1.42,3.15a1,1,0,0,1-.05.92l-2.13,3.63a1,1,0,0,0,.17,1.24L19.32,49a1,1,0,0,0,1.29.09L23.49,47a1,1,0,0,1,1-.1l3.74,1.67a1,1,0,0,1,.59.75l.66,3.79a1,1,0,0,0,1,.84h4.89a1,1,0,0,0,1-.86l.58-4a1,1,0,0,1,.58-.77l3.58-1.62a1,1,0,0,1,1,.09l3.14,2.12a1,1,0,0,0,1.3-.15L50,45.06a1,1,0,0,0,.09-1.27l-2.08-3a1,1,0,0,1-.09-1l1.48-3.43a1,1,0,0,1,.71-.59L53.77,35a1,1,0,0,0,.8-1V29.42a1,1,0,0,0-.8-1l-3.72-.78a1,1,0,0,1-.73-.62l-1.45-3.65a1,1,0,0,1,.11-.94l2.15-3.14A1,1,0,0,0,50,18l-3.71-3.25A1,1,0,0,0,45,14.67Z"
-              />
-              <circle cx="32.82" cy="31.94" r="9.94" />
-            </svg>
-          </a>
-        {/if}
-        <BackendSwitcher
-          {backends}
-          selectedId={selectedBackend}
-          loading={backendsLoading}
-          error={backendsError}
-          onSelect={handleBackendSelect}
-        />
+            <path
+              d="M45,14.67l-2.76,2a1,1,0,0,1-1,.11L37.65,15.3a1,1,0,0,1-.61-.76l-.66-3.77a1,1,0,0,0-1-.84H30.52a1,1,0,0,0-1,.77l-.93,3.72a1,1,0,0,1-.53.65l-3.3,1.66a1,1,0,0,1-1-.08l-3-2.13a1,1,0,0,0-1.31.12l-3.65,3.74a1,1,0,0,0-.13,1.26l1.87,2.88a1,1,0,0,1,.1.89L16.34,27a1,1,0,0,1-.68.63l-3.85,1.06a1,1,0,0,0-.74,1v4.74a1,1,0,0,0,.8,1l3.9.8a1,1,0,0,1,.72.57l1.42,3.15a1,1,0,0,1-.05.92l-2.13,3.63a1,1,0,0,0,.17,1.24L19.32,49a1,1,0,0,0,1.29.09L23.49,47a1,1,0,0,1,1-.1l3.74,1.67a1,1,0,0,1,.59.75l.66,3.79a1,1,0,0,0,1,.84h4.89a1,1,0,0,0,1-.86l.58-4a1,1,0,0,1,.58-.77l3.58-1.62a1,1,0,0,1,1,.09l3.14,2.12a1,1,0,0,0,1.3-.15L50,45.06a1,1,0,0,0,.09-1.27l-2.08-3a1,1,0,0,1-.09-1l1.48-3.43a1,1,0,0,1,.71-.59L53.77,35a1,1,0,0,0,.8-1V29.42a1,1,0,0,0-.8-1l-3.72-.78a1,1,0,0,1-.73-.62l-1.45-3.65a1,1,0,0,1,.11-.94l2.15-3.14A1,1,0,0,0,50,18l-3.71-3.25A1,1,0,0,0,45,14.67Z"
+            />
+            <circle cx="32.82" cy="31.94" r="9.94" />
+          </svg>
+        </a>
         <a
           href="https://github.com/iobis/odis-ui"
           class="github-link"
@@ -461,7 +385,6 @@
 <SearchSettings
   open={settingsOpen}
   {includeGraphFragments}
-  disabled={!odisBackendActive}
   onClose={() => (settingsOpen = false)}
   onGraphFragmentsChange={handleGraphFragmentsChange}
 />
