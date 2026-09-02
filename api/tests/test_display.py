@@ -91,6 +91,98 @@ def test_dataset_untitled_without_name() -> None:
     assert display.facts == ()
 
 
+def test_dataset_facts_license_and_temporal_coverage() -> None:
+    display = display_for(
+        {
+            "type": ["Dataset"],
+            "name": "Storm events",
+            "jsonld": {
+                "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+                "temporalCoverage": "1950-01-01/2013-12-18",
+            },
+        },
+        "dataset",
+    )
+    labels = {fact.label: fact for fact in display.facts}
+    assert labels["License"].value == "CC0 1.0"
+    assert labels["License"].href == "https://creativecommons.org/publicdomain/zero/1.0/"
+    assert labels["Temporal coverage"].value == "1950-01-01/2013-12-18"
+
+
+def test_dataset_license_from_resolved_creative_work() -> None:
+    display = display_for(
+        {
+            "type": ["Dataset"],
+            "name": "eDNA sequences",
+            "jsonld": {
+                "license": {
+                    "@type": "CreativeWork",
+                    "name": "CC-BY-4.0",
+                    "schema:url": {
+                        "@type": "URL",
+                        "@value": "https://spdx.org/licenses/CC-BY-4.0",
+                    },
+                },
+                "temporalCoverage": "2021-08-17/2024-08-29",
+            },
+        },
+        "dataset",
+    )
+    labels = {fact.label: fact for fact in display.facts}
+    assert labels["License"].value == "CC-BY-4.0"
+    assert labels["License"].href == "https://spdx.org/licenses/CC-BY-4.0"
+    assert labels["Temporal coverage"].value == "2021-08-17/2024-08-29"
+
+
+def test_dataset_temporal_coverage_open_ended() -> None:
+    display = display_for(
+        {
+            "type": ["Dataset"],
+            "name": "Ongoing survey",
+            "jsonld": {"temporalCoverage": "2015-11/.."},
+        },
+        "dataset",
+    )
+    labels = {fact.label: fact for fact in display.facts}
+    assert labels["Temporal coverage"].value == "2015-11 – present"
+
+
+def test_dataset_unresolved_license_reference_is_omitted() -> None:
+    display = display_for(
+        {
+            "type": ["Dataset"],
+            "name": "Partial metadata",
+            "jsonld": {
+                "license": "https://w3id.org/marco-bolo/mbo_500ee36e-324d-4f2f-9b0b-a4408f638201",
+                "temporalCoverage": "2000/2023",
+            },
+        },
+        "dataset",
+    )
+    labels = {fact.label: fact for fact in display.facts}
+    assert "License" not in labels
+    assert labels["Temporal coverage"].value == "2000/2023"
+
+
+def test_dataset_facts_via_map_document_to_item() -> None:
+    item = map_document_to_item(
+        "https://example.org/dataset/1",
+        {
+            "source": "medin",
+            "type": ["Dataset"],
+            "name": "Lundy fauna",
+            "jsonld": {
+                "license": "https://spdx.org/licenses/CC-BY-4.0",
+                "temporalCoverage": "1848/1975",
+            },
+        },
+    )
+    labels = {fact.label: fact for fact in item.facts}
+    assert item.title == "Lundy fauna"
+    assert labels["License"].value == "CC-BY-4.0"
+    assert labels["Temporal coverage"].value == "1848/1975"
+
+
 def test_organization_title_falls_back_to_legal_name() -> None:
     display = display_for(
         {

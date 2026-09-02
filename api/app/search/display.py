@@ -117,6 +117,63 @@ def _identifier_fact(raw: Any) -> DisplayFact | None:
     return None
 
 
+def _url_href(value: Any) -> str | None:
+    text = _text(value)
+    if text and "://" in text:
+        return text
+    if isinstance(value, dict):
+        href = _text(_lookup(value, "url")) or _text(_lookup(value, "schema:url"))
+        if href and "://" in href:
+            return href
+    return None
+
+
+def _license_label(value: Any) -> tuple[str | None, str | None]:
+    """Return display label and optional link for a schema.org license value."""
+    if isinstance(value, dict):
+        name = _entity_label(value)
+        href = _url_href(value)
+        if not href:
+            ref_id = _text(_lookup(value, "@id"))
+            if ref_id and "://" in ref_id:
+                href = ref_id
+        if name:
+            return name, href
+        if href and "w3id.org/marco-bolo/mbo_" in href:
+            return None, None
+
+    text = _text(value)
+    if not text:
+        return None, None
+    if "://" not in text:
+        return text, None
+
+    lowered = text.lower()
+    path = urlparse(text).path.rstrip("/").split("/")[-1]
+
+    if "w3id.org/marco-bolo/mbo_" in lowered:
+        return None, None
+    if "creativecommons.org/publicdomain/zero" in lowered:
+        return "CC0 1.0", text
+    if "creativecommons.org/licenses/by" in lowered:
+        version = path if path.replace(".", "").isdigit() else "4.0"
+        return f"CC BY {version}", text
+    if "spdx.org/licenses/" in lowered:
+        return path, text
+    if path and path not in ("1.0", "2.0", "3.0", "4.0"):
+        return path.replace("-", " "), text
+    return text, text
+
+
+def _temporal_coverage_label(value: Any) -> str | None:
+    text = _text(value)
+    if not text:
+        return None
+    if text.endswith("/.."):
+        return f"{text[:-3]} – present"
+    return text.replace("/..", " – present")
+
+
 def default_presenter(source: dict[str, Any]) -> RecordDisplay:
     title = _text(get_property(source, "name")) or UNTITLED
     return RecordDisplay(title=title)
@@ -154,7 +211,25 @@ def organization_presenter(source: dict[str, Any]) -> RecordDisplay:
     return RecordDisplay(title=title)
 
 
+def dataset_presenter(source: dict[str, Any]) -> RecordDisplay:
+    title = _text(get_property(source, "name")) or UNTITLED
+
+    facts: list[DisplayFact] = []
+    for raw_license in _as_list(get_property(source, "license")):
+        label, href = _license_label(raw_license)
+        if label:
+            facts.append(DisplayFact(label="License", value=label, href=href))
+            break
+
+    temporal = _temporal_coverage_label(get_property(source, "temporalCoverage"))
+    if temporal:
+        facts.append(DisplayFact(label="Temporal coverage", value=temporal))
+
+    return RecordDisplay(title=title, facts=tuple(facts))
+
+
 PRESENTERS: dict[str, Presenter] = {
+    "dataset": dataset_presenter,
     "person": person_presenter,
     "organization": organization_presenter,
 }
