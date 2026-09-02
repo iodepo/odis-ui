@@ -82,8 +82,8 @@
   }
 
   .pill.on {
-    background: var(--ink);
-    border-color: var(--ink);
+    background: var(--primary);
+    border-color: var(--primary);
     color: var(--paper-raised);
   }
 
