@@ -27,7 +27,9 @@
     {/if}
   </h2>
   {#if item.source?.name}
-    <p class="source">{item.source.name}</p>
+    <p class="source-meta">
+      <span class="source-pill" title="Data source">{item.source.name}</span>
+    </p>
   {/if}
   {#if facts.length}
     <dl class="facts">
@@ -45,11 +47,6 @@
       {/each}
     </dl>
   {/if}
-  {#if item.url}
-    <p class="record-url">
-      <a href={item.url} target="_blank" rel="noopener noreferrer">{item.url}</a>
-    </p>
-  {/if}
   {#if item.summary}
     <SummaryText summary={item.summary} />
   {/if}
@@ -59,6 +56,9 @@
     </div>
   {/if}
   <div class="record-links">
+    {#if item.url}
+      <a class="record-link" href={item.url} target="_blank" rel="noopener noreferrer">URL</a>
+    {/if}
     <a class="record-link" href={recordUrl(item.id)} target="_blank" rel="noopener noreferrer">
       API record
     </a>

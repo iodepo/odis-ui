@@ -341,10 +341,22 @@ body {
   color: var(--primary);
 }
 
-.result-card .source {
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: 0.85rem;
+.result-card .source-meta {
+  margin: -0.1rem 0 0;
+}
+
+.result-card .source-pill {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  color: var(--ink-faint);
+  font-size: 0.74rem;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
 }
 
 .result-card .facts {
@@ -380,23 +392,6 @@ body {
 }
 
 .result-card .facts a:hover {
-  text-decoration: underline;
-}
-
-.result-card .record-url {
-  margin: 0;
-  font-size: 0.8rem;
-  line-height: 1.4;
-}
-
-.result-card .record-url a {
-  color: var(--ink-faint);
-  text-decoration: none;
-  word-break: break-all;
-}
-
-.result-card .record-url a:hover {
-  color: var(--primary);
   text-decoration: underline;
 }
 
