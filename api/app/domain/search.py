@@ -31,6 +31,12 @@ class SpatialExtent(BaseModel):
     )
 
 
+class DisplayFact(BaseModel):
+    label: str
+    value: str
+    href: str | None = None
+
+
 class SearchItem(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
@@ -54,6 +60,10 @@ class SearchItem(BaseModel):
     type: str
     url: str | None = None
     source: SourceRef | None = None
+    facts: list[DisplayFact] = Field(
+        default_factory=list,
+        description="Type-specific fields for the result card (affiliation, ORCID, …)",
+    )
     highlight: dict[str, str] | None = None
     spatial: SpatialExtent | None = Field(
         default=None,

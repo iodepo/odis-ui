@@ -16,6 +16,7 @@ from app.domain.search import (
     SourceFacetBucket,
     SourceRef,
 )
+from app.search.display import display_for
 from app.search.elasticsearch.mappings import pascal_type, raw_types_for_filter
 from app.search.elasticsearch.spatial import extract_spatial_extent
 from app.search.gleaner.ids import encode_record_id
@@ -248,14 +249,16 @@ def map_document_to_item(
     doc_id = _as_str(source.get("id")) or es_id
     record_id = encode_record_id(source_code, doc_id)
     normalized = _normalize_type(source.get("type"))
+    display = display_for(source, normalized)
     summary = _as_str(source.get("description"))
     url = _as_str(source.get("url")) or _as_str(source.get("source_url"))
     item = SearchItem(
         id=record_id,
-        title=_as_str(source.get("name")) or "(untitled)",
+        title=display.title,
         summary=summary,
         type=_display_type(normalized, source.get("type")),
         url=url,
+        facts=list(display.facts),
         source=SourceRef(
             id=source_code,
             name=(source_names or {}).get(source_code),

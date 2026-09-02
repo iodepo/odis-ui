@@ -3,12 +3,9 @@
   import FacetPanel from "./lib/FacetPanel.svelte";
   import DevBanner from "./lib/DevBanner.svelte";
   import SearchSettings from "./lib/SearchSettings.svelte";
-  import SpatialExtentMap from "./lib/SpatialExtentMap.svelte";
-  import TypeBadge from "./lib/TypeBadge.svelte";
+  import ResultCard from "./lib/ResultCard.svelte";
   import TypePillBar from "./lib/TypePillBar.svelte";
-  import SummaryText from "./lib/SummaryText.svelte";
   import {
-    recordUrl,
     search,
     type SearchFacets,
     type SearchParams,
@@ -337,49 +334,7 @@
       {#if results}
         <p class="results-meta">{formatNumber(results.total)} result{results.total === 1 ? "" : "s"}</p>
         {#each results.items as item (item.id)}
-          <article class="result-card">
-            <TypeBadge type={item.type} />
-            <h2>
-              {#if item.url}
-                <a href={item.url} class="result-title-link" target="_blank" rel="noopener noreferrer"
-                  >{item.title}</a
-                >
-              {:else}
-                {item.title}
-              {/if}
-            </h2>
-            {#if item.source?.name}
-              <p class="source">{item.source.name}</p>
-            {/if}
-            {#if item.url}
-              <p class="record-url">
-                <a href={item.url} target="_blank" rel="noopener noreferrer">{item.url}</a>
-              </p>
-            {/if}
-            {#if item.summary}
-              <SummaryText summary={item.summary} />
-            {/if}
-            {#if item.spatial && (item.spatial.boxes.length || item.spatial.points.length)}
-              <div class="card-foot">
-                <SpatialExtentMap spatial={item.spatial} recordType={item.type} />
-              </div>
-            {/if}
-            <div class="record-links">
-              <a class="record-link" href={recordUrl(item.id)} target="_blank" rel="noopener noreferrer">
-                API record
-              </a>
-              {#if item.elasticsearch_document_url}
-                <a
-                  class="record-link"
-                  href={item.elasticsearch_document_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Elasticsearch document
-                </a>
-              {/if}
-            </div>
-          </article>
+          <ResultCard {item} />
         {/each}
 
         {#if hasMore}

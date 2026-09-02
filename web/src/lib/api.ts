@@ -42,6 +42,12 @@ export interface SpatialExtent {
   points: GeoPoint[];
 }
 
+export interface DisplayFact {
+  label: string;
+  value: string;
+  href?: string | null;
+}
+
 export interface SearchItem {
   id: string;
   title: string;
@@ -49,6 +55,7 @@ export interface SearchItem {
   type: string;
   url?: string | null;
   source?: SourceRef | null;
+  facts?: DisplayFact[] | null;
   highlight?: Record<string, string> | null;
   spatial?: SpatialExtent | null;
   elasticsearch_document_url?: string | null;

@@ -347,6 +347,42 @@ body {
   font-size: 0.85rem;
 }
 
+.result-card .facts {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+}
+
+.result-card .facts div {
+  display: grid;
+  grid-template-columns: 7.25rem minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.result-card .facts dt {
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.result-card .facts dd {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+.result-card .facts a {
+  color: var(--primary);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.result-card .facts a:hover {
+  text-decoration: underline;
+}
+
 .result-card .record-url {
   margin: 0;
   font-size: 0.8rem;
