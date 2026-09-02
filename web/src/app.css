@@ -46,17 +46,45 @@ body {
 }
 
 .dev-banner {
+  position: relative;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: center;
   flex-wrap: wrap;
   gap: 0.5rem 0.65rem;
-  padding: 0.55rem 1.5rem;
+  padding: 0.55rem 2.75rem 0.55rem 1.5rem;
   background: var(--training-tint);
   border-bottom: 1px solid #eed9a8;
   color: var(--training);
   font-size: 0.85rem;
   text-align: center;
+}
+
+.dev-banner-close {
+  position: absolute;
+  top: 50%;
+  right: 0.65rem;
+  transform: translateY(-50%);
+  margin: 0;
+  padding: 0.15rem 0.35rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.65;
+}
+
+.dev-banner-close:hover {
+  opacity: 1;
+}
+
+.dev-banner-close:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .dev-banner p {
