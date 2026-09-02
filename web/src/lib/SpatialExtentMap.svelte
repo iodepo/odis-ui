@@ -68,7 +68,6 @@
   }
 
   .extent-label {
-    font-family: "IBM Plex Mono", monospace;
     font-variant-numeric: tabular-nums;
     line-height: 1.3;
   }

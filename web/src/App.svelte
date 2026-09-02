@@ -7,7 +7,6 @@
   import TypeBadge from "./lib/TypeBadge.svelte";
   import TypePillBar from "./lib/TypePillBar.svelte";
   import SummaryText from "./lib/SummaryText.svelte";
-  import ActiveFilters from "./lib/ActiveFilters.svelte";
   import {
     recordUrl,
     search,
@@ -199,13 +198,6 @@
     await runSearch();
   }
 
-  async function handleClearFilters() {
-    selectedTypes = [];
-    selectedSources = [];
-    page = 1;
-    await runSearch();
-  }
-
   async function handleGraphFragmentsChange(enabled: boolean) {
     includeGraphFragments = enabled;
     writeGraphFragmentsPreference(enabled);
@@ -228,103 +220,104 @@
 
 <DevBanner />
 
-<main>
-  <header class="page-header">
-    <div class="page-header-top">
-      <div class="page-header-brand">
+<header class="brandbar">
+  <div class="brandbar-inner">
+    <div class="page-header-brand">
+      <a href="/" class="site-title" onclick={handleHomeClick}>
         <img
           class="site-logo"
-          src="/iode-unesco-logo-1024x449.png"
-          width="1024"
-          height="449"
-          alt="UNESCO IOC / International Oceanographic Data and Information Exchange (IODE)"
+          src="/ioc-logo.svg"
+          width="1920"
+          height="1405"
+          alt="Intergovernmental Oceanographic Commission (IOC) of UNESCO"
         />
-        <h1>
-          <a href="/" class="site-title" onclick={handleHomeClick}>
-            <img
-              class="odis-logo"
-              src="/ODIS_logo_cropped.png"
-              width="940"
-              height="390"
-              alt="ODIS"
-            />
-            Search
-          </a>
-        </h1>
-      </div>
-      <div class="page-header-actions">
-        <a
-          href="#settings"
-          class="github-link"
-          aria-label="Search settings"
-          title="Search settings"
-          onclick={(event) => {
-            event.preventDefault();
-            settingsOpen = true;
-          }}
-        >
-          <svg
-            class="settings-icon"
-            viewBox="0 0 64 64"
-            width="20"
-            height="20"
-            xmlns="http://www.w3.org/2000/svg"
-            stroke-width="3"
-            stroke="currentColor"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M45,14.67l-2.76,2a1,1,0,0,1-1,.11L37.65,15.3a1,1,0,0,1-.61-.76l-.66-3.77a1,1,0,0,0-1-.84H30.52a1,1,0,0,0-1,.77l-.93,3.72a1,1,0,0,1-.53.65l-3.3,1.66a1,1,0,0,1-1-.08l-3-2.13a1,1,0,0,0-1.31.12l-3.65,3.74a1,1,0,0,0-.13,1.26l1.87,2.88a1,1,0,0,1,.1.89L16.34,27a1,1,0,0,1-.68.63l-3.85,1.06a1,1,0,0,0-.74,1v4.74a1,1,0,0,0,.8,1l3.9.8a1,1,0,0,1,.72.57l1.42,3.15a1,1,0,0,1-.05.92l-2.13,3.63a1,1,0,0,0,.17,1.24L19.32,49a1,1,0,0,0,1.29.09L23.49,47a1,1,0,0,1,1-.1l3.74,1.67a1,1,0,0,1,.59.75l.66,3.79a1,1,0,0,0,1,.84h4.89a1,1,0,0,0,1-.86l.58-4a1,1,0,0,1,.58-.77l3.58-1.62a1,1,0,0,1,1,.09l3.14,2.12a1,1,0,0,0,1.3-.15L50,45.06a1,1,0,0,0,.09-1.27l-2.08-3a1,1,0,0,1-.09-1l1.48-3.43a1,1,0,0,1,.71-.59L53.77,35a1,1,0,0,0,.8-1V29.42a1,1,0,0,0-.8-1l-3.72-.78a1,1,0,0,1-.73-.62l-1.45-3.65a1,1,0,0,1,.11-.94l2.15-3.14A1,1,0,0,0,50,18l-3.71-3.25A1,1,0,0,0,45,14.67Z"
-            />
-            <circle cx="32.82" cy="31.94" r="9.94" />
-          </svg>
-        </a>
-        <a
-          href="https://github.com/iobis/odis-ui"
-          class="github-link"
-          aria-label="View source on GitHub"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
-            <path
-              fill="currentColor"
-              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"
-            />
-          </svg>
-        </a>
-      </div>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="sitename">ODIS Search</span>
+      </a>
     </div>
-    <p class="subtitle">Faceted search over ODIS metadata records</p>
-  </header>
+    <div class="page-header-actions">
+      <a
+        href="#settings"
+        class="github-link"
+        aria-label="Search settings"
+        title="Search settings"
+        onclick={(event) => {
+          event.preventDefault();
+          settingsOpen = true;
+        }}
+      >
+        <svg
+          class="settings-icon"
+          viewBox="0 0 64 64"
+          width="20"
+          height="20"
+          xmlns="http://www.w3.org/2000/svg"
+          stroke-width="3"
+          stroke="currentColor"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M45,14.67l-2.76,2a1,1,0,0,1-1,.11L37.65,15.3a1,1,0,0,1-.61-.76l-.66-3.77a1,1,0,0,0-1-.84H30.52a1,1,0,0,0-1,.77l-.93,3.72a1,1,0,0,1-.53.65l-3.3,1.66a1,1,0,0,1-1-.08l-3-2.13a1,1,0,0,0-1.31.12l-3.65,3.74a1,1,0,0,0-.13,1.26l1.87,2.88a1,1,0,0,1,.1.89L16.34,27a1,1,0,0,1-.68.63l-3.85,1.06a1,1,0,0,0-.74,1v4.74a1,1,0,0,0,.8,1l3.9.8a1,1,0,0,1,.72.57l1.42,3.15a1,1,0,0,1-.05.92l-2.13,3.63a1,1,0,0,0,.17,1.24L19.32,49a1,1,0,0,0,1.29.09L23.49,47a1,1,0,0,1,1-.1l3.74,1.67a1,1,0,0,1,.59.75l.66,3.79a1,1,0,0,0,1,.84h4.89a1,1,0,0,0,1-.86l.58-4a1,1,0,0,1,.58-.77l3.58-1.62a1,1,0,0,1,1,.09l3.14,2.12a1,1,0,0,0,1.3-.15L50,45.06a1,1,0,0,0,.09-1.27l-2.08-3a1,1,0,0,1-.09-1l1.48-3.43a1,1,0,0,1,.71-.59L53.77,35a1,1,0,0,0,.8-1V29.42a1,1,0,0,0-.8-1l-3.72-.78a1,1,0,0,1-.73-.62l-1.45-3.65a1,1,0,0,1,.11-.94l2.15-3.14A1,1,0,0,0,50,18l-3.71-3.25A1,1,0,0,0,45,14.67Z"
+          />
+          <circle cx="32.82" cy="31.94" r="9.94" />
+        </svg>
+      </a>
+      <a
+        href="https://github.com/iobis/odis-ui"
+        class="github-link"
+        aria-label="View source on GitHub"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"
+          />
+        </svg>
+      </a>
+    </div>
+  </div>
+</header>
 
-  <form class="search-form" onsubmit={handleSearch}>
-    <input
-      type="search"
-      bind:value={query}
-      placeholder="Search title, description, keywords…"
-      onsearch={handleSearchBoxSearch}
+<div class="hero-search">
+  <div class="hero-search-inner">
+    <h1>Search ocean data and information</h1>
+    <form class="search-form" onsubmit={handleSearch}>
+      <span class="search-glyph" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2" />
+          <path
+            d="M16.5 16.5 21 21"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+      </span>
+      <input
+        type="search"
+        bind:value={query}
+        placeholder="Search title, description, keywords…"
+        onsearch={handleSearchBoxSearch}
+        aria-label="Search"
+      />
+    </form>
+
+    <TypePillBar
+      {typeOptions}
+      {selectedTypes}
+      facets={results?.facets ?? null}
+      total={results?.total ?? null}
+      onAllTypes={handleAllTypes}
+      onTypeToggle={handleTypeToggle}
     />
-    <button type="submit" disabled={loading}>{loading ? "Searching…" : "Search"}</button>
-  </form>
+  </div>
+</div>
 
-  <TypePillBar
-    {typeOptions}
-    {selectedTypes}
-    onAllTypes={handleAllTypes}
-    onTypeToggle={handleTypeToggle}
-  />
-
-  <ActiveFilters
-    {selectedTypes}
-    {selectedSources}
-    {sourceOptions}
-    onTypeToggle={handleTypeToggle}
-    onSourceToggle={handleSourceToggle}
-    onClearAll={handleClearFilters}
-  />
-
+<main class="page">
   <div class="layout">
     <FacetPanel
       facets={results?.facets ?? null}
@@ -404,6 +397,16 @@
     </section>
   </div>
 </main>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <div>
+      <strong>UNESCO — Intergovernmental Oceanographic Commission</strong>
+      International Oceanographic Data and Information Exchange (IODE)
+    </div>
+    <div>Ocean Data and Information System</div>
+  </div>
+</footer>
 
 <SearchSettings
   open={settingsOpen}

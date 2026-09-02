@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ODIS Search — IOC portal variations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ds-blue: #0077d4;
+        --ds-blue-2: #115a9e;
+        --ds-blue-light: #b2d6f2;
+        --ds-black: #212121;
+        --ds-gray-5: #4c5054;
+        --ds-gray-4: #7f888f;
+        --ds-gray-3: #b1babe;
+        --ds-gray-2: #d5dadd;
+        --ds-gray-1: #f1f4f6;
+        --ds-green: #4fb293;
+        --ds-green-tint: #dcf0e9;
+        --ds-red: #d6664f;
+        --ds-red-tint: #f7ddd5;
+        --ds-orange: #e4a429;
+        --ds-orange-tint: #faedd4;
+        --ds-purple: #4b6ad9;
+        --ds-purple-tint: #e4e8f8;
+        --ds-org-tint: #cce4f6;
+        --tk-navy: #183254;
+        --tk-green: #67bb89;
+        --page: #f7f8fa;
+        --ink: #212121;
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, sans-serif;
+        color: var(--ink);
+        background: var(--page);
+        line-height: 1.5;
+      }
+
+      .doc-bar {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        background: var(--tk-navy);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        padding: 0.7rem 1.5rem;
+        font-size: 0.82rem;
+      }
+      .doc-bar strong { font-weight: 600; }
+      .doc-bar nav { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-left: auto; }
+      .doc-bar a {
+        color: #fff;
+        text-decoration: none;
+        padding: 0.28rem 0.65rem;
+        border: 1px solid transparent;
+      }
+      .doc-bar a:hover { border-color: rgba(255,255,255,0.35); }
+
+      .wrap { max-width: 1180px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+      h1.doc { font-size: 2rem; font-weight: 700; letter-spacing: -0.03em; margin: 0 0 0.5rem; }
+      .lede { font-size: 1.15rem; color: var(--ds-gray-5); max-width: 46rem; margin: 0 0 2rem; }
+      h2.sec {
+        font-size: 1.35rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin: 2.5rem 0 0.75rem;
+        padding-top: 0.5rem;
+        border-top: 3px solid var(--ds-blue);
+        display: inline-block;
+      }
+      h3.sec { font-size: 1.05rem; margin: 1.5rem 0 0.6rem; }
+      p.note { color: var(--ds-gray-5); max-width: 48rem; }
+      ul.tight { margin: 0.4rem 0 1rem; padding-left: 1.1rem; font-size: 0.88rem; color: var(--ds-gray-5); }
+      ul.tight li { margin: 0.2rem 0; }
+
+      .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; margin: 1rem 0 1.5rem; }
+      .swatch { background: #fff; border: 1px solid var(--ds-gray-2); }
+      .swatch .chip { height: 48px; }
+      .swatch .meta { padding: 0.5rem 0.65rem 0.65rem; font-size: 0.75rem; }
+      .swatch .name { font-weight: 600; display: block; }
+      .swatch code { font-size: 0.7rem; color: var(--ds-gray-5); }
+
+      table.compare {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        font-size: 0.88rem;
+        margin: 1rem 0 2rem;
+      }
+      table.compare th, table.compare td {
+        text-align: left;
+        padding: 0.7rem 0.85rem;
+        border-bottom: 1px solid var(--ds-gray-2);
+        vertical-align: top;
+      }
+      table.compare th { background: var(--ds-gray-1); font-weight: 600; }
+      table.compare td:first-child { font-weight: 600; white-space: nowrap; }
+
+      .callout {
+        background: #fff;
+        border-left: 4px solid var(--ds-blue);
+        padding: 0.9rem 1.1rem;
+        margin: 1rem 0 1.5rem;
+        font-size: 0.92rem;
+      }
+
+      .proposal-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: baseline;
+        flex-wrap: wrap;
+        margin-top: 2.75rem;
+      }
+      .proposal-head h2 { border: 0; padding: 0; margin: 0; font-size: 1.45rem; }
+      .tag {
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        background: var(--ds-blue);
+        color: #fff;
+        padding: 0.28rem 0.55rem;
+      }
+      .tag.rec { background: var(--tk-green); color: var(--tk-navy); }
+
+      .frame {
+        margin: 1rem 0 0.75rem;
+        border: 1px solid var(--ds-gray-3);
+        background: #c8cdd2;
+        padding: 0.7rem 0.7rem 1rem;
+      }
+      .frame-label {
+        font-size: 0.72rem;
+        color: var(--ds-gray-5);
+        margin: 0 0 0.45rem 0.15rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+      .browser { background: #fff; overflow: hidden; }
+      .browser.tall { min-height: 680px; }
+
+      /* Current ODIS */
+      .now { font-family: "IBM Plex Sans", sans-serif; background: #f3f6f4; color: #12232b; }
+      .now header { padding: 1.1rem 1.3rem 0.4rem; display: flex; align-items: center; gap: 0.7rem; }
+      .now .brand img.site { height: 36px; width: auto; }
+      .now h1 { font-family: Fraunces, serif; font-size: 1.25rem; font-weight: 500; margin: 0; display: flex; align-items: center; gap: 0.3em; }
+      .now .odis { height: 1.05em; }
+      .now .sub { margin: 0 1.3rem 0.9rem; color: #4b5d63; font-size: 0.85rem; }
+      .now .search { display: flex; gap: 0.4rem; margin: 0 1.3rem 0.9rem; }
+      .now .search input { flex: 1; border: 1px solid #d7e0dc; padding: 0.45rem 0.7rem; border-radius: 4px; }
+      .now .search button { background: #0f6e56; color: #fff; border: 0; padding: 0.45rem 1rem; border-radius: 4px; }
+      .now .pills { display: flex; gap: 0.4rem; margin: 0 1.3rem 1rem; flex-wrap: wrap; }
+      .now .pill { border: 1px solid #b7c6c1; border-radius: 20px; padding: 0.3rem 0.7rem; font-size: 0.75rem; color: #4b5d63; background: #f3f6f4; }
+      .now .pill.on { background: #12232b; color: #fff; border-color: #12232b; }
+      .now .grid { display: grid; grid-template-columns: 200px 1fr; gap: 1rem; padding: 0 1.3rem 1.3rem; }
+      .now .facet { background: #fff; border: 1px solid #d7e0dc; border-radius: 4px; padding: 0.8rem; font-size: 0.78rem; }
+      .now .facet h2 { margin: 0 0 0.4rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: #4b5d63; }
+      .now .card { background: #fff; border: 1px solid #d7e0dc; border-radius: 4px; padding: 0.85rem; margin-bottom: 0.55rem; }
+      .now .badge { font-family: "IBM Plex Mono", monospace; font-size: 0.62rem; padding: 0.12rem 0.4rem; border-radius: 3px; }
+      .now .badge.dataset { background: #e1f5ee; color: #0f6e56; }
+      .now .badge.literature { background: #faeee7; color: #a3401f; }
+      .now .card h3 { margin: 0.35rem 0 0.2rem; font-size: 0.88rem; font-weight: 500; }
+      .now .card p { margin: 0; font-size: 0.78rem; color: #4b5d63; }
+
+      /* Shared portal chrome */
+      .p1 { font-family: Inter, sans-serif; background: var(--ds-gray-1); color: var(--ds-black); }
+      .p1 .brandbar {
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1.3rem;
+        border-bottom: 1px solid var(--ds-gray-2);
+        border-top: 3px solid var(--ds-blue);
+      }
+      .p1 .brand-left { display: flex; align-items: center; gap: 1rem; }
+      .p1 .mock-logo { height: 40px; width: auto; display: block; }
+      .p1 .vdiv { width: 1px; height: 36px; background: var(--ds-gray-2); }
+      .p1 .sitename { font-size: 0.92rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+      .p1 .sitename small { display: block; font-weight: 500; color: var(--ds-gray-5); font-size: 0.68rem; letter-spacing: 0; }
+      .p1 .nav { display: flex; gap: 1.1rem; font-size: 0.82rem; font-weight: 500; }
+      .p1 .nav .on { color: var(--ds-blue); box-shadow: inset 0 -2px 0 var(--ds-blue); padding-bottom: 0.2rem; }
+      .p1 .crumb { font-size: 0.72rem; color: var(--ds-gray-4); padding: 0.55rem 1.3rem 0; }
+      .p1 .hero-search {
+        background: #fff;
+        padding: 1.1rem 1.3rem 1.2rem;
+        border-bottom: 1px solid var(--ds-gray-2);
+      }
+      .p1 .hero-search h1 { margin: 0 0 0.65rem; font-size: 1.55rem; font-weight: 700; letter-spacing: -0.03em; }
+      .p1 .searchrow { display: flex; }
+      .p1 .searchrow input {
+        flex: 1;
+        border: 1px solid var(--ds-gray-3);
+        border-right: 0;
+        padding: 0.7rem 0.85rem;
+        font: inherit;
+        font-size: 0.95rem;
+      }
+      .p1 .searchrow button {
+        background: var(--ds-blue);
+        color: #fff;
+        border: 0;
+        padding: 0 1.35rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+      .p1 .filters { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.75rem; }
+      .p1 .chip {
+        border: 1px solid var(--ds-gray-3);
+        background: #fff;
+        padding: 0.28rem 0.7rem;
+        font-size: 0.75rem;
+        color: var(--ds-gray-5);
+      }
+      .p1 .chip.on { background: var(--ds-blue); border-color: var(--ds-blue); color: #fff; }
+      .p1 .body { display: grid; grid-template-columns: 220px 1fr; gap: 1.25rem; padding: 1.15rem 1.3rem 1.4rem; }
+      .p1 .facet { background: #fff; padding: 0.9rem 0.95rem; }
+      .p1 .facet h2 { margin: 0 0 0.55rem; font-size: 0.78rem; font-weight: 700; }
+      .p1 .facet label { display: flex; gap: 0.45rem; align-items: center; font-size: 0.8rem; margin: 0.32rem 0; }
+      .p1 .facet .n { margin-left: auto; color: var(--ds-gray-4); font-size: 0.72rem; }
+      .p1 .meta { font-size: 0.8rem; color: var(--ds-gray-5); margin: 0 0 0.75rem; }
+      .p1 .card { background: #fff; padding: 0.95rem 1rem; margin-bottom: 0.65rem; }
+      .p1 .type { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ds-blue); }
+      .p1 .card h3 { margin: 0.15rem 0 0.25rem; font-size: 0.95rem; font-weight: 600; }
+      .p1 .card p { margin: 0; font-size: 0.8rem; color: var(--ds-gray-5); }
+      .p1 .src { font-size: 0.72rem; color: var(--ds-gray-4); margin-top: 0.3rem; }
+      .p1 footer {
+        background: var(--ds-black);
+        color: #d5dadd;
+        padding: 1.1rem 1.3rem;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        font-size: 0.72rem;
+      }
+      .p1 footer strong { color: #fff; display: block; margin-bottom: 0.2rem; }
+
+      /* —— Shared type tokens for variations —— */
+      .pills .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        padding: 0.32rem 0.8rem;
+        font-size: 0.78rem;
+        font-weight: 500;
+        border: 1px solid transparent;
+        line-height: 1.2;
+      }
+      .pills .pill .cnt {
+        font-size: 0.68rem;
+        font-variant-numeric: tabular-nums;
+        opacity: 0.7;
+      }
+      .badge {
+        display: inline-block;
+        width: fit-content;
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        padding: 0.16rem 0.48rem;
+        border-radius: 4px;
+        text-transform: lowercase;
+      }
+      .badge.dataset { color: #2f7d68; background: var(--ds-green-tint); }
+      .badge.literature { color: #b4503c; background: var(--ds-red-tint); }
+      .badge.org { color: var(--ds-blue-2); background: var(--ds-org-tint); }
+      .badge.training { color: #9a6d12; background: var(--ds-orange-tint); }
+      .badge.project { color: #3d56b8; background: var(--ds-purple-tint); }
+
+      /* V2 — Soft pills + tinted badges */
+      .v2 .hero-search { padding-bottom: 1.05rem; }
+      .v2 .searchrow { overflow: hidden; border-radius: 8px; border: 1px solid var(--ds-gray-3); }
+      .v2 .searchrow input { border: 0; padding: 0.78rem 0.95rem; }
+      .v2 .searchrow button { padding: 0 1.4rem; }
+      .v2 .pills { margin-top: 0.85rem; display: flex; gap: 0.4rem; flex-wrap: wrap; }
+      .v2 .pill { background: #fff; color: var(--ds-gray-5); border-color: var(--ds-gray-2); }
+      .v2 .pill.on { background: var(--ds-black); color: #fff; border-color: var(--ds-black); }
+      .v2 .pill.on .cnt { opacity: 0.65; }
+      .v2 .card {
+        border-radius: 8px;
+        border: 1px solid var(--ds-gray-2);
+        padding: 0.9rem 1.05rem 1rem;
+      }
+      .v2 .facet { border-radius: 8px; }
+      .v2 .card h3 { margin: 0.4rem 0 0.28rem; }
+
+      /* V3 — Colour-coded pills */
+      .v3 .searchrow { overflow: hidden; border-radius: 8px; border: 1px solid var(--ds-gray-3); }
+      .v3 .searchrow input { border: 0; }
+      .v3 .pills { margin-top: 0.85rem; display: flex; gap: 0.4rem; flex-wrap: wrap; }
+      .v3 .pill.all { background: #fff; color: var(--ds-gray-5); border-color: var(--ds-gray-2); }
+      .v3 .pill.all.on { background: var(--ds-blue); color: #fff; border-color: var(--ds-blue); }
+      .v3 .pill.dataset { background: var(--ds-green-tint); color: #2f7d68; }
+      .v3 .pill.literature { background: var(--ds-red-tint); color: #b4503c; }
+      .v3 .pill.org { background: var(--ds-org-tint); color: var(--ds-blue-2); }
+      .v3 .pill.training { background: var(--ds-orange-tint); color: #9a6d12; }
+      .v3 .pill.project { background: var(--ds-purple-tint); color: #3d56b8; }
+      .v3 .pill.dataset.on { background: var(--ds-green); color: #fff; }
+      .v3 .pill.literature.on { background: var(--ds-red); color: #fff; }
+      .v3 .card {
+        border-radius: 8px;
+        border: 1px solid var(--ds-gray-2);
+        padding: 0.9rem 1.05rem 1rem;
+      }
+      .v3 .facet { border-radius: 8px; }
+      .v3 .card h3 { margin: 0.4rem 0 0.28rem; }
+      .v3 .dot {
+        width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+      }
+      .v3 .facet .dot.dataset { background: var(--ds-green); }
+      .v3 .facet .dot.literature { background: var(--ds-red); }
+      .v3 .facet .dot.org { background: var(--ds-blue); }
+      .v3 .facet .dot.training { background: var(--ds-orange); }
+
+      /* V4 — Tinted card wash */
+      .v4 .hero-search {
+        border-bottom: 0;
+        padding-bottom: 0.35rem;
+      }
+      .v4 .searchrow { overflow: hidden; border-radius: 10px; border: 1px solid var(--ds-gray-2); background: #fff; }
+      .v4 .searchrow input { border: 0; }
+      .v4 .pills { margin-top: 0.9rem; display: flex; gap: 0.4rem; flex-wrap: wrap; }
+      .v4 .pill { background: #fff; color: var(--ds-gray-5); border-color: var(--ds-gray-2); }
+      .v4 .pill.on { background: var(--ds-blue); color: #fff; border-color: var(--ds-blue); }
+      .v4 .pill.dataset { background: var(--ds-green-tint); color: #2f7d68; border-color: transparent; }
+      .v4 .pill.literature { background: var(--ds-red-tint); color: #b4503c; border-color: transparent; }
+      .v4 .pill.org { background: var(--ds-org-tint); color: var(--ds-blue-2); border-color: transparent; }
+      .v4 .pill.training { background: var(--ds-orange-tint); color: #9a6d12; border-color: transparent; }
+      .v4 .pill.project { background: var(--ds-purple-tint); color: #3d56b8; border-color: transparent; }
+      .v4 .body { padding-top: 0.85rem; }
+      .v4 .facet { border-radius: 10px; }
+      .v4 .card {
+        border-radius: 10px;
+        border: 1px solid var(--ds-gray-2);
+        padding: 0;
+        overflow: hidden;
+        background: #fff;
+      }
+      .v4 .card.dataset { border-left: 6px solid var(--ds-green-tint); }
+      .v4 .card.literature { border-left: 6px solid var(--ds-red-tint); }
+      .v4 .card.org { border-left: 6px solid var(--ds-org-tint); }
+      .v4 .card-inner { padding: 0.85rem 1.05rem 1rem; }
+      .v4 .headline { display: flex; align-items: baseline; gap: 0.55rem; flex-wrap: wrap; }
+      .v4 .headline h3 { margin: 0; }
+      .v4 .card p { margin-top: 0.35rem; }
+
+      .rec-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; margin: 1rem 0 2rem; }
+      .rec-card { background: #fff; border: 1px solid var(--ds-gray-2); padding: 1rem 1.05rem; }
+      .rec-card h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+      .rec-card p { margin: 0; font-size: 0.85rem; color: var(--ds-gray-5); }
+      .rec-card.pick { border-top: 4px solid var(--ds-blue); }
+
+      @media (max-width: 900px) {
+        .p1 .body, .now .grid, .rec-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="doc-bar">
+      <strong>ODIS Search redesign</strong>
+      <span>Proposal 1 family</span>
+      <nav>
+        <a href="#palette">Palette</a>
+        <a href="#current">Current</a>
+        <a href="#p1">1 · Portal</a>
+        <a href="#v2">Soft pills</a>
+        <a href="#v3">Colour pills</a>
+        <a href="#v4">Tinted cards</a>
+        <a href="#pick">Pick</a>
+      </nav>
+    </div>
+
+    <div class="wrap">
+      <h1 class="doc">Proposal 1, with the type language brought back</h1>
+      <p class="lede">
+        One direction: the IOC portal (Inter, digital blue <code>#0077D4</code>, white header, no black utility bar).
+        The new variations keep that chrome and restore what worked in the current UI — rounded type pills and
+        record types marked with a quiet tinted badge — using UNESCO dataviz colours instead of the old teal set.
+      </p>
+
+      <h2 class="sec" id="palette">Colour system</h2>
+      <p class="note">
+        Chrome and logo stay UNESCO digital / toolkit. Type colour (pills and badges) uses the design-system
+        dataviz pair + alert tint, so dataset / literature / organisation stay scannable without leaving the identity.
+      </p>
+      <div class="swatches">
+        <div class="swatch"><div class="chip" style="background:#0077D4"></div><div class="meta"><span class="name">Digital blue</span><code>#0077D4</code> · chrome, search</div></div>
+        <div class="swatch"><div class="chip" style="background:#F1F4F6"></div><div class="meta"><span class="name">Page gray</span><code>#F1F4F6</code></div></div>
+        <div class="swatch"><div class="chip" style="background:#4FB293"></div><div class="meta"><span class="name">Dataset</span><code>#4FB293</code> on <code>#DCF0E9</code></div></div>
+        <div class="swatch"><div class="chip" style="background:#D6664F"></div><div class="meta"><span class="name">Literature</span><code>#D6664F</code> on <code>#F7DDD5</code></div></div>
+        <div class="swatch"><div class="chip" style="background:#0077D4"></div><div class="meta"><span class="name">Organization</span><code>#0077D4</code> on <code>#CCE4F6</code></div></div>
+        <div class="swatch"><div class="chip" style="background:#E4A429"></div><div class="meta"><span class="name">Training</span><code>#E4A429</code> on <code>#FAEDD4</code></div></div>
+        <div class="swatch"><div class="chip" style="background:#4B6AD9"></div><div class="meta"><span class="name">Project</span><code>#4B6AD9</code> on <code>#E4E8F8</code></div></div>
+      </div>
+
+      <h2 class="sec" id="current">What we are bringing back</h2>
+      <p class="note">
+        From the current app: the pill filter bar, and type badges with a tinted background rather than uppercase
+        blue labels. Those two cues make a results list readable at a glance.
+      </p>
+      <div class="frame">
+        <p class="frame-label">Current ODIS — pills and tinted badges</p>
+        <div class="browser now">
+          <header>
+            <img class="site" src="web/public/ioc-logo.svg" alt="IOC / IODE" />
+            <h1>ODIS Search</h1>
+          </header>
+          <p class="sub">Faceted search over ODIS metadata records</p>
+          <div class="search">
+            <input value="salinity North Atlantic" readonly />
+            <button>Search</button>
+          </div>
+          <div class="pills">
+            <span class="pill on">All types</span>
+            <span class="pill">Dataset</span>
+            <span class="pill">Literature</span>
+            <span class="pill">Organization</span>
+            <span class="pill">Training</span>
+            <span class="pill">Project</span>
+          </div>
+          <div class="grid">
+            <aside class="facet">
+              <h2>Type</h2>
+              <div>Dataset 12,480</div>
+              <div>Literature 4,210</div>
+            </aside>
+            <div>
+              <article class="card">
+                <span class="badge dataset">dataset</span>
+                <h3>World Ocean Atlas 2023 — Salinity</h3>
+                <p>NOAA NCEI · Global objectively analysed salinity fields…</p>
+              </article>
+              <article class="card">
+                <span class="badge literature">literature</span>
+                <h3>Observing ocean salinity from space</h3>
+                <p>Ocean Science · Satellite SSS retrievals…</p>
+              </article>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROPOSAL 1 -->
+      <div class="proposal-head" id="p1">
+        <h2>1 — IOC portal</h2>
+        <span class="tag">Baseline</span>
+      </div>
+      <p class="note">
+        Institutional chrome only: white header, 3px blue rule, square chips, uppercase type labels with no fill.
+        Kept as the reference. The three variations below add the current app’s type language on top of this.
+      </p>
+      <div class="frame">
+        <p class="frame-label">Proposal 1 — baseline</p>
+        <div class="browser p1 tall">
+          <div class="brandbar">
+            <div class="brand-left">
+              <img class="mock-logo" src="web/public/ioc-logo.svg" alt="UNESCO IOC IODE" />
+              <div class="vdiv"></div>
+              <div class="sitename">ODIS Search<small>Ocean Data and Information System</small></div>
+            </div>
+            <div class="nav">
+              <span class="on">Search</span>
+              <span>About</span>
+              <span>API</span>
+            </div>
+          </div>
+          <div class="crumb">IOC &nbsp;›&nbsp; IODE &nbsp;›&nbsp; ODIS &nbsp;›&nbsp; Search</div>
+          <div class="hero-search">
+            <h1>Search ocean data and information</h1>
+            <div class="searchrow">
+              <input value="salinity North Atlantic" readonly />
+              <button>Search</button>
+            </div>
+            <div class="filters">
+              <span class="chip on">All types</span>
+              <span class="chip">Dataset</span>
+              <span class="chip">Literature</span>
+              <span class="chip">Organization</span>
+              <span class="chip">Training</span>
+              <span class="chip">Project</span>
+            </div>
+          </div>
+          <div class="body">
+            <aside class="facet">
+              <h2>Type</h2>
+              <label><input type="checkbox" disabled /> Dataset <span class="n">12,480</span></label>
+              <label><input type="checkbox" disabled /> Literature <span class="n">4,210</span></label>
+              <label><input type="checkbox" disabled /> Organization <span class="n">890</span></label>
+              <h2 style="margin-top:1rem">Datasource</h2>
+              <label><input type="checkbox" disabled /> SeaDataNet <span class="n">3,104</span></label>
+              <label><input type="checkbox" disabled /> OBIS <span class="n">2,441</span></label>
+            </aside>
+            <section>
+              <p class="meta">18,412 results</p>
+              <article class="card">
+                <div class="type">Dataset</div>
+                <h3>World Ocean Atlas 2023 — Salinity</h3>
+                <p>Global objectively analysed salinity fields at standard depth levels, 1955–2022 climatology.</p>
+                <div class="src">NOAA National Centers for Environmental Information</div>
+              </article>
+              <article class="card">
+                <div class="type" style="color:#d6664f">Literature</div>
+                <h3>Observing ocean salinity from space</h3>
+                <p>Review of satellite SSS retrievals and in situ validation in the North Atlantic.</p>
+                <div class="src">Ocean Science / Copernicus Publications</div>
+              </article>
+            </section>
+          </div>
+          <footer>
+            <div>
+              <strong>UNESCO — Intergovernmental Oceanographic Commission</strong>
+              International Oceanographic Data and Information Exchange (IODE)
+            </div>
+            <div>7, place de Fontenoy · 75352 Paris 07 SP, France</div>
+          </footer>
+        </div>
+      </div>
+
+      <div class="proposal-head" id="v2">
+        <h2>Soft pills + tinted badges</h2>
+        <span class="tag rec">Closest to current UI</span>
+      </div>
+      <p class="note">
+        Same header and search. Type filters become the current rounded pills (ink fill when selected). Each result
+        gets a lowercase badge on a UNESCO alert tint — the same pattern as today, retinted. Cards and search pick
+        up a modest 8px radius so it feels a step newer than the Drupal squares, without a new colour story.
+      </p>
+      <div class="frame">
+        <p class="frame-label">Variation — soft pills</p>
+        <div class="browser p1 v2">
+          <div class="brandbar">
+            <div class="brand-left">
+              <img class="mock-logo" src="web/public/ioc-logo.svg" alt="UNESCO IOC IODE" />
+              <div class="vdiv"></div>
+              <div class="sitename">ODIS Search<small>Ocean Data and Information System</small></div>
+            </div>
+            <div class="nav">
+              <span class="on">Search</span>
+              <span>About</span>
+              <span>API</span>
+            </div>
+          </div>
+          <div class="hero-search">
+            <h1>Search ocean data and information</h1>
+            <div class="searchrow">
+              <input value="salinity North Atlantic" readonly />
+              <button>Search</button>
+            </div>
+            <div class="pills">
+              <span class="pill on">All types <span class="cnt">18.4k</span></span>
+              <span class="pill">Dataset <span class="cnt">12.5k</span></span>
+              <span class="pill">Literature <span class="cnt">4.2k</span></span>
+              <span class="pill">Organization <span class="cnt">890</span></span>
+              <span class="pill">Training <span class="cnt">312</span></span>
+              <span class="pill">Project <span class="cnt">204</span></span>
+            </div>
+          </div>
+          <div class="body">
+            <aside class="facet">
+              <h2>Datasource</h2>
+              <label><input type="checkbox" disabled /> SeaDataNet <span class="n">3,104</span></label>
+              <label><input type="checkbox" disabled /> OBIS <span class="n">2,441</span></label>
+              <label><input type="checkbox" disabled /> EMODnet <span class="n">1,988</span></label>
+              <label><input type="checkbox" disabled /> NOAA NCEI <span class="n">1,204</span></label>
+            </aside>
+            <section>
+              <p class="meta">18,412 results</p>
+              <article class="card">
+                <span class="badge dataset">dataset</span>
+                <h3>World Ocean Atlas 2023 — Salinity</h3>
+                <p>Global objectively analysed salinity fields at standard depth levels, 1955–2022 climatology.</p>
+                <div class="src">NOAA National Centers for Environmental Information</div>
+              </article>
+              <article class="card">
+                <span class="badge dataset">dataset</span>
+                <h3>Argo GDAC delayed-mode profiles</h3>
+                <p>Temperature and salinity profiles from the global Argo array, delayed-mode quality controlled.</p>
+                <div class="src">Ifremer / Coriolis</div>
+              </article>
+              <article class="card">
+                <span class="badge literature">literature</span>
+                <h3>Observing ocean salinity from space</h3>
+                <p>Review of satellite SSS retrievals and in situ validation in the North Atlantic.</p>
+                <div class="src">Ocean Science / Copernicus Publications</div>
+              </article>
+              <article class="card">
+                <span class="badge org">organization</span>
+                <h3>International Oceanographic Data and Information Exchange</h3>
+                <p>IODE programme of the IOC, coordinating ocean data centres and associated networks.</p>
+                <div class="src">IOC-UNESCO</div>
+              </article>
+            </section>
+          </div>
+          <footer>
+            <div>
+              <strong>UNESCO — Intergovernmental Oceanographic Commission</strong>
+              International Oceanographic Data and Information Exchange (IODE)
+            </div>
+            <div>7, place de Fontenoy · 75352 Paris 07 SP, France</div>
+          </footer>
+        </div>
+      </div>
+
+      <div class="proposal-head" id="v3">
+        <h2>Colour-coded pills</h2>
+        <span class="tag">Type colour in the filter</span>
+      </div>
+      <p class="note">
+        Pills wear the type tint at rest, so the filter bar itself is the legend. Selected state fills with the
+        type colour (or digital blue for “All”). Facet rows get a matching dot. Stronger scanning, still inside
+        the UNESCO dataviz set.
+      </p>
+      <div class="frame">
+        <p class="frame-label">Variation — colour-coded pills</p>
+        <div class="browser p1 v3">
+          <div class="brandbar">
+            <div class="brand-left">
+              <img class="mock-logo" src="web/public/ioc-logo.svg" alt="UNESCO IOC IODE" />
+              <div class="vdiv"></div>
+              <div class="sitename">ODIS Search<small>Ocean Data and Information System</small></div>
+            </div>
+            <div class="nav">
+              <span class="on">Search</span>
+              <span>About</span>
+              <span>API</span>
+            </div>
+          </div>
+          <div class="hero-search">
+            <h1>Search ocean data and information</h1>
+            <div class="searchrow">
+              <input value="salinity North Atlantic" readonly />
+              <button>Search</button>
+            </div>
+            <div class="pills">
+              <span class="pill all on">All types <span class="cnt">18.4k</span></span>
+              <span class="pill dataset">Dataset <span class="cnt">12.5k</span></span>
+              <span class="pill literature">Literature <span class="cnt">4.2k</span></span>
+              <span class="pill org">Organization <span class="cnt">890</span></span>
+              <span class="pill training">Training <span class="cnt">312</span></span>
+              <span class="pill project">Project <span class="cnt">204</span></span>
+            </div>
+          </div>
+          <div class="body">
+            <aside class="facet">
+              <h2>Type</h2>
+              <label><span class="dot dataset"></span> Dataset <span class="n">12,480</span></label>
+              <label><span class="dot literature"></span> Literature <span class="n">4,210</span></label>
+              <label><span class="dot org"></span> Organization <span class="n">890</span></label>
+              <label><span class="dot training"></span> Training <span class="n">312</span></label>
+              <h2 style="margin-top:1rem">Datasource</h2>
+              <label><input type="checkbox" disabled /> SeaDataNet <span class="n">3,104</span></label>
+              <label><input type="checkbox" disabled /> OBIS <span class="n">2,441</span></label>
+            </aside>
+            <section>
+              <p class="meta">18,412 results</p>
+              <article class="card">
+                <span class="badge dataset">dataset</span>
+                <h3>World Ocean Atlas 2023 — Salinity</h3>
+                <p>Global objectively analysed salinity fields at standard depth levels, 1955–2022 climatology.</p>
+                <div class="src">NOAA National Centers for Environmental Information</div>
+              </article>
+              <article class="card">
+                <span class="badge literature">literature</span>
+                <h3>Observing ocean salinity from space</h3>
+                <p>Review of satellite SSS retrievals and in situ validation in the North Atlantic.</p>
+                <div class="src">Ocean Science / Copernicus Publications</div>
+              </article>
+              <article class="card">
+                <span class="badge org">organization</span>
+                <h3>International Oceanographic Data and Information Exchange</h3>
+                <p>IODE programme of the IOC, coordinating ocean data centres.</p>
+                <div class="src">IOC-UNESCO</div>
+              </article>
+              <article class="card">
+                <span class="badge training">course</span>
+                <h3>Ocean Teacher Global Academy — salinity data management</h3>
+                <p>Training course on quality control of in situ salinity observations.</p>
+                <div class="src">OTGA / IODE</div>
+              </article>
+            </section>
+          </div>
+          <footer>
+            <div>
+              <strong>UNESCO — Intergovernmental Oceanographic Commission</strong>
+              International Oceanographic Data and Information Exchange (IODE)
+            </div>
+            <div>7, place de Fontenoy · 75352 Paris 07 SP, France</div>
+          </footer>
+        </div>
+      </div>
+
+      <div class="proposal-head" id="v4">
+        <h2>Tinted cards</h2>
+        <span class="tag">Most visual</span>
+      </div>
+      <p class="note">
+        Colour-coded pills plus a 6px type-tint rail on each card, badge sitting on the same line as the title.
+        The list becomes a legend you can skim. Still UNESCO tints only — no extra palette.
+      </p>
+      <div class="frame">
+        <p class="frame-label">Variation — tinted cards</p>
+        <div class="browser p1 v4">
+          <div class="brandbar">
+            <div class="brand-left">
+              <img class="mock-logo" src="web/public/ioc-logo.svg" alt="UNESCO IOC IODE" />
+              <div class="vdiv"></div>
+              <div class="sitename">ODIS Search<small>Ocean Data and Information System</small></div>
+            </div>
+            <div class="nav">
+              <span class="on">Search</span>
+              <span>About</span>
+              <span>API</span>
+            </div>
+          </div>
+          <div class="hero-search">
+            <h1>Search ocean data and information</h1>
+            <div class="searchrow">
+              <input value="salinity North Atlantic" readonly />
+              <button>Search</button>
+            </div>
+            <div class="pills">
+              <span class="pill on">All types <span class="cnt">18.4k</span></span>
+              <span class="pill dataset">Dataset</span>
+              <span class="pill literature">Literature</span>
+              <span class="pill org">Organization</span>
+              <span class="pill training">Training</span>
+              <span class="pill project">Project</span>
+            </div>
+          </div>
+          <div class="body">
+            <aside class="facet">
+              <h2>Datasource</h2>
+              <label><input type="checkbox" disabled /> SeaDataNet <span class="n">3,104</span></label>
+              <label><input type="checkbox" disabled /> OBIS <span class="n">2,441</span></label>
+              <label><input type="checkbox" disabled /> EMODnet <span class="n">1,988</span></label>
+              <label><input type="checkbox" disabled /> NOAA NCEI <span class="n">1,204</span></label>
+            </aside>
+            <section>
+              <p class="meta">18,412 results</p>
+              <article class="card dataset">
+                <div class="card-inner">
+                  <div class="headline">
+                    <span class="badge dataset">dataset</span>
+                    <h3>World Ocean Atlas 2023 — Salinity</h3>
+                  </div>
+                  <p>Global objectively analysed salinity fields at standard depth levels, 1955–2022 climatology.</p>
+                  <div class="src">NOAA National Centers for Environmental Information</div>
+                </div>
+              </article>
+              <article class="card dataset">
+                <div class="card-inner">
+                  <div class="headline">
+                    <span class="badge dataset">dataset</span>
+                    <h3>Argo GDAC delayed-mode profiles</h3>
+                  </div>
+                  <p>Temperature and salinity profiles from the global Argo array, delayed-mode quality controlled.</p>
+                  <div class="src">Ifremer / Coriolis</div>
+                </div>
+              </article>
+              <article class="card literature">
+                <div class="card-inner">
+                  <div class="headline">
+                    <span class="badge literature">literature</span>
+                    <h3>Observing ocean salinity from space</h3>
+                  </div>
+                  <p>Review of satellite SSS retrievals and in situ validation in the North Atlantic.</p>
+                  <div class="src">Ocean Science / Copernicus Publications</div>
+                </div>
+              </article>
+              <article class="card org">
+                <div class="card-inner">
+                  <div class="headline">
+                    <span class="badge org">organization</span>
+                    <h3>International Oceanographic Data and Information Exchange</h3>
+                  </div>
+                  <p>IODE programme of the IOC, coordinating ocean data centres and associated networks.</p>
+                  <div class="src">IOC-UNESCO</div>
+                </div>
+              </article>
+            </section>
+          </div>
+          <footer>
+            <div>
+              <strong>UNESCO — Intergovernmental Oceanographic Commission</strong>
+              International Oceanographic Data and Information Exchange (IODE)
+            </div>
+            <div>7, place de Fontenoy · 75352 Paris 07 SP, France</div>
+          </footer>
+        </div>
+      </div>
+
+      <h2 class="sec" id="pick">Which of these</h2>
+      <div class="rec-grid">
+        <div class="rec-card pick">
+          <h3>Soft pills</h3>
+          <p>Safest mix: IOC header, current interaction model, UNESCO tints. If you want “same tool, new clothes,” this is it.</p>
+        </div>
+        <div class="rec-card">
+          <h3>Colour-coded pills</h3>
+          <p>Use if the type filter should teach the colour system. A bit louder; still on-brand.</p>
+        </div>
+        <div class="rec-card">
+          <h3>Tinted cards</h3>
+          <p>Use if the results list should feel less like a Drupal catalog. Rails + inline badges are the extra interest.</p>
+        </div>
+      </div>
+
+      <table class="compare">
+        <thead>
+          <tr>
+            <th></th>
+            <th>1 Portal</th>
+            <th>Soft pills</th>
+            <th>Colour pills</th>
+            <th>Tinted cards</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Chrome</td>
+            <td colspan="4">White header, 3px <code>#0077D4</code> rule, Inter, dark footer</td>
+          </tr>
+          <tr>
+            <td>Type filters</td>
+            <td>Square chips</td>
+            <td>Rounded pills, ink when on</td>
+            <td>Pills tinted by type</td>
+            <td>Pills tinted by type</td>
+          </tr>
+          <tr>
+            <td>Type on cards</td>
+            <td>Uppercase label, no fill</td>
+            <td>Lowercase tinted badge</td>
+            <td>Lowercase tinted badge</td>
+            <td>Badge + 6px tint rail</td>
+          </tr>
+          <tr>
+            <td>Corners</td>
+            <td>Square</td>
+            <td>8px</td>
+            <td>8px</td>
+            <td>10px</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        The live app is unchanged. Say which variation to build (or a mix: e.g. soft pills + tint rail) and it can go into
+        <code>app.css</code> / <code>TypePillBar</code> / <code>TypeBadge</code> next.
+      </div>
+    </div>
+  </body>
+</html>

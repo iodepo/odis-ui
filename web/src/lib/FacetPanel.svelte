@@ -98,16 +98,16 @@
 
 <style>
   .facet-panel {
-    background: #fff;
-    border: 1px solid #d7e0dc;
-    border-radius: 4px;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 8px;
     padding: 1rem;
   }
 
   .facet-group + .facet-group {
     margin-top: 1.25rem;
     padding-top: 1.25rem;
-    border-top: 1px solid #d7e0dc;
+    border-top: 1px solid var(--line);
   }
 
   h2 {
@@ -116,13 +116,13 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #4b5d63;
+    color: var(--ink-soft);
   }
 
   .facet-hint {
     margin: 0 0 0.75rem;
     font-size: 0.75rem;
-    color: #8a9a9f;
+    color: var(--ink-faint);
   }
 
   ul {
@@ -151,14 +151,14 @@
   }
 
   .count {
-    color: #4b5d63;
+    color: var(--ink-soft);
     font-size: 0.8rem;
     font-variant-numeric: tabular-nums;
   }
 
   .empty {
     margin: 0;
-    color: #4b5d63;
+    color: var(--ink-soft);
     font-size: 0.85rem;
   }
 </style>
