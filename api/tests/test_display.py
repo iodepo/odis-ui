@@ -183,6 +183,84 @@ def test_dataset_facts_via_map_document_to_item() -> None:
     assert labels["Temporal coverage"].value == "1848/1975"
 
 
+def test_publication_lists_single_author() -> None:
+    display = display_for(
+        {
+            "type": ["CreativeWork"],
+            "name": "Ocean acidification review",
+            "jsonld": {
+                "author": {"@type": "Person", "name": "Jane Doe"},
+            },
+        },
+        "creativework",
+    )
+    labels = {fact.label: fact for fact in display.facts}
+    assert labels["Author"].value == "Jane Doe"
+
+
+def test_publication_lists_multiple_authors() -> None:
+    display = display_for(
+        {
+            "type": ["CreativeWork"],
+            "name": "Coastal monitoring report",
+            "jsonld": {
+                "author": [
+                    {"@type": "Person", "givenName": "Joanna", "familyName": "Smith"},
+                    {"@type": "Person", "name": "Ada Lovelace"},
+                ],
+            },
+        },
+        "creativework",
+    )
+    labels = {fact.label: fact for fact in display.facts}
+    assert labels["Authors"].value == "Joanna Smith, Ada Lovelace"
+
+
+def test_publication_author_falls_back_to_creator() -> None:
+    display = display_for(
+        {
+            "type": ["ScholarlyArticle"],
+            "name": "Phytoplankton trends",
+            "jsonld": {
+                "creator": {"@type": "Organization", "name": "VLIZ"},
+            },
+        },
+        "scholarlyarticle",
+    )
+    labels = {fact.label: fact for fact in display.facts}
+    assert labels["Author"].value == "VLIZ"
+
+
+def test_publication_deduplicates_author_and_creator() -> None:
+    display = display_for(
+        {
+            "type": ["CreativeWork"],
+            "name": "Duplicate authorship",
+            "jsonld": {
+                "author": {"@type": "Person", "name": "Jane Doe"},
+                "creator": {"@type": "Person", "name": "Jane Doe"},
+            },
+        },
+        "creativework",
+    )
+    labels = {fact.label: fact for fact in display.facts}
+    assert labels["Author"].value == "Jane Doe"
+
+
+def test_publication_unresolved_author_reference_is_omitted() -> None:
+    display = display_for(
+        {
+            "type": ["CreativeWork"],
+            "name": "Draft paper",
+            "jsonld": {
+                "author": {"@id": "https://w3id.org/marco-bolo/mbo_bf08f5c2-fef3-48a1-80b3-413534d2925b"},
+            },
+        },
+        "creativework",
+    )
+    assert display.facts == ()
+
+
 def test_organization_title_falls_back_to_legal_name() -> None:
     display = display_for(
         {

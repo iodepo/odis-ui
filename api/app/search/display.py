@@ -174,6 +174,35 @@ def _temporal_coverage_label(value: Any) -> str | None:
     return text.replace("/..", " – present")
 
 
+def _contributor_label(value: Any) -> str | None:
+    if isinstance(value, dict):
+        label = _entity_label(value)
+        if label:
+            return label
+        given = _text(_lookup(value, "givenName"))
+        family = _text(_lookup(value, "familyName"))
+        combined = " ".join(part for part in (given, family) if part)
+        if combined:
+            return combined
+        ref_id = _text(_lookup(value, "@id"))
+        if ref_id and "w3id.org/marco-bolo/mbo_" in ref_id.lower():
+            return None
+        return None
+    return _text(value)
+
+
+def _contributor_labels(source: dict[str, Any], *property_names: str) -> list[str]:
+    labels: list[str] = []
+    seen: set[str] = set()
+    for name in property_names:
+        for item in _as_list(get_property(source, name)):
+            label = _contributor_label(item)
+            if label and label not in seen:
+                seen.add(label)
+                labels.append(label)
+    return labels
+
+
 def default_presenter(source: dict[str, Any]) -> RecordDisplay:
     title = _text(get_property(source, "name")) or UNTITLED
     return RecordDisplay(title=title)
@@ -228,10 +257,28 @@ def dataset_presenter(source: dict[str, Any]) -> RecordDisplay:
     return RecordDisplay(title=title, facts=tuple(facts))
 
 
+def publication_presenter(source: dict[str, Any]) -> RecordDisplay:
+    title = _text(get_property(source, "name")) or UNTITLED
+
+    facts: list[DisplayFact] = []
+    authors = _contributor_labels(source, "author", "creator")
+    if authors:
+        facts.append(
+            DisplayFact(
+                label="Author" if len(authors) == 1 else "Authors",
+                value=", ".join(authors),
+            )
+        )
+
+    return RecordDisplay(title=title, facts=tuple(facts))
+
+
 PRESENTERS: dict[str, Presenter] = {
     "dataset": dataset_presenter,
     "person": person_presenter,
     "organization": organization_presenter,
+    "creativework": publication_presenter,
+    "scholarlyarticle": publication_presenter,
 }
 
 
