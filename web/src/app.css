@@ -228,8 +228,7 @@ body {
 
   .brandbar-inner,
   .hero-search-inner,
-  .page,
-  .site-footer-inner {
+  .page {
     padding-left: 1rem;
     padding-right: 1rem;
   }
@@ -248,10 +247,6 @@ body {
 
   .hero-search h1 {
     font-size: 1.25rem;
-  }
-
-  .site-footer-inner {
-    flex-wrap: wrap;
   }
 }
 
@@ -447,29 +442,6 @@ body {
 
 .error {
   color: var(--literature);
-}
-
-.site-footer {
-  background: var(--ink);
-  color: var(--line);
-  margin-top: auto;
-}
-
-.site-footer-inner {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 1.15rem 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  font-size: 0.75rem;
-}
-
-.site-footer strong {
-  color: #fff;
-  display: block;
-  margin-bottom: 0.2rem;
-  font-weight: 600;
 }
 
 .search-settings-dialog {

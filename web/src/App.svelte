@@ -353,16 +353,6 @@
   </div>
 </main>
 
-<footer class="site-footer">
-  <div class="site-footer-inner">
-    <div>
-      <strong>UNESCO — Intergovernmental Oceanographic Commission</strong>
-      International Oceanographic Data and Information Exchange (IODE)
-    </div>
-    <div>Ocean Data and Information System</div>
-  </div>
-</footer>
-
 <SearchSettings
   open={settingsOpen}
   {includeGraphFragments}
