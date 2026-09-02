@@ -33,6 +33,7 @@
   let sourceOptions = $state<{ id: string; name?: string | null }[]>([]);
   let includeGraphFragments = $state(readGraphFragmentsPreference());
   let settingsOpen = $state(false);
+  let searchGeneration = 0;
 
   const hasMore = $derived(results !== null && results.items.length < results.total);
 
@@ -68,43 +69,57 @@
   }
 
   async function runSearch(pushUrl = true, append = false) {
-    if (append) {
-      if (loading || !hasMore) return;
-      loadingMore = true;
-    } else {
-      if (loading) return;
-      loading = true;
-      searchError = null;
-    }
-
     const params = currentParams();
 
-    if (pushUrl && !append) {
+    if (append) {
+      if (loadingMore || !hasMore) return;
+      const generation = searchGeneration;
+      loadingMore = true;
+
+      try {
+        const response = await search(params);
+        if (generation !== searchGeneration) return;
+        if (results) {
+          results = {
+            ...response,
+            items: [...results.items, ...response.items],
+          };
+        }
+      } catch (e) {
+        if (generation !== searchGeneration) return;
+        page = Math.max(1, page - 1);
+      } finally {
+        if (generation === searchGeneration) {
+          loadingMore = false;
+        }
+      }
+      return;
+    }
+
+    searchGeneration += 1;
+    const generation = searchGeneration;
+    loading = true;
+    loadingMore = false;
+    searchError = null;
+
+    if (pushUrl) {
       history.replaceState(null, "", buildSearchUrl(params));
     }
 
     try {
       const response = await search(params);
-      if (append && results) {
-        results = {
-          ...response,
-          items: [...results.items, ...response.items],
-        };
-      } else {
-        results = response;
-      }
+      if (generation !== searchGeneration) return;
+      results = response;
       updateTypeOptions(response.facets);
       updateSourceOptions(response.facets);
     } catch (e) {
-      if (append) {
-        page = Math.max(1, page - 1);
-      } else {
-        searchError = e instanceof Error ? e.message : "Search failed";
-        results = null;
-      }
+      if (generation !== searchGeneration) return;
+      searchError = e instanceof Error ? e.message : "Search failed";
+      results = null;
     } finally {
-      loading = false;
-      loadingMore = false;
+      if (generation === searchGeneration) {
+        loading = false;
+      }
     }
   }
 

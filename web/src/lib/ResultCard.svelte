@@ -1,4 +1,5 @@
 <script lang="ts">
+  import HighlightText from "./HighlightText.svelte";
   import SpatialExtentMap from "./SpatialExtentMap.svelte";
   import SummaryText from "./SummaryText.svelte";
   import TypeBadge from "./TypeBadge.svelte";
@@ -13,15 +14,23 @@
 
   const theme = $derived(resolveTypeTheme(item.type));
   const facts = $derived(item.facts ?? []);
+  const highlightedTitle = $derived(item.highlight?.title ?? null);
+  const highlightedSummary = $derived(item.highlight?.summary ?? null);
 </script>
 
 <article class="result-card {theme.badge}">
   <TypeBadge type={item.type} />
   <h2>
     {#if item.url}
-      <a href={item.url} class="result-title-link" target="_blank" rel="noopener noreferrer"
-        >{item.title}</a
-      >
+      <a href={item.url} class="result-title-link" target="_blank" rel="noopener noreferrer">
+        {#if highlightedTitle}
+          <HighlightText text={highlightedTitle} />
+        {:else}
+          {item.title}
+        {/if}
+      </a>
+    {:else if highlightedTitle}
+      <HighlightText text={highlightedTitle} />
     {:else}
       {item.title}
     {/if}
@@ -47,8 +56,8 @@
       {/each}
     </dl>
   {/if}
-  {#if item.summary}
-    <SummaryText summary={item.summary} />
+  {#if highlightedSummary || item.summary}
+    <SummaryText summary={item.summary ?? ""} highlightedSummary={highlightedSummary} />
   {/if}
   {#if item.spatial && (item.spatial.boxes.length || item.spatial.points.length)}
     <div class="card-foot">

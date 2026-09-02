@@ -428,6 +428,14 @@ body {
   white-space: pre-line;
 }
 
+.result-card mark.search-hit {
+  font-style: normal;
+  font-weight: 600;
+  color: inherit;
+  background: #fef9c3;
+  border-radius: 2px;
+}
+
 .summary-toggle {
   display: inline;
   margin-left: 0.35rem;

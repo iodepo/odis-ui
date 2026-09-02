@@ -1,6 +1,11 @@
 from app.domain.search import SearchQuery
 from app.search.gleaner.ids import decode_record_id, encode_record_id
-from app.search.gleaner.queries import build_search_body, map_document_to_item, map_search_response
+from app.search.gleaner.queries import (
+    _map_highlight,
+    build_search_body,
+    map_document_to_item,
+    map_search_response,
+)
 
 
 def test_encode_decode_roundtrip() -> None:
@@ -82,6 +87,7 @@ def test_gleaner_search_body_filters_and_aggs() -> None:
     assert "sources" in body["aggs"]
     assert body["query"]["bool"]["must"][0]["multi_match"]["query"] == "coral"
     assert body["track_total_hits"] is True
+    assert body["highlight"]["fields"]["description"] == {"number_of_fragments": 0}
 
 
 def test_gleaner_search_body_omits_primary_type_filter_when_graph_fragments_enabled() -> None:
@@ -190,6 +196,21 @@ def test_map_search_response_merges_schema_type_facets() -> None:
         "ResearchProject",
         "Organization",
     ]
+
+
+def test_map_highlight_renames_fields() -> None:
+    mapped = _map_highlight(
+        {
+            "name": ["Salinity in <em>Bellingham</em> Bay"],
+            "description": ["Hourly <em>salinity</em> measurements"],
+            "keywords": ["<em>coral</em>"],
+        }
+    )
+    assert mapped == {
+        "title": "Salinity in <em>Bellingham</em> Bay",
+        "summary": "Hourly <em>salinity</em> measurements",
+        "keywords": "<em>coral</em>",
+    }
 
 
 def test_map_document_strips_schema_type_prefix() -> None:

@@ -150,7 +150,7 @@ def build_search_body(query: SearchQuery) -> dict[str, Any]:
         body["highlight"] = {
             "fields": {
                 "name": {},
-                "description": {},
+                "description": {"number_of_fragments": 0},
                 "keywords": {},
             }
         }
@@ -223,6 +223,14 @@ def _merge_type_facets(buckets: list[dict[str, Any]]) -> list[FacetBucket]:
     ]
 
 
+def _highlight_field_key(field: str) -> str:
+    if field == "name":
+        return "title"
+    if field == "description":
+        return "summary"
+    return field
+
+
 def _map_highlight(highlight: dict[str, list[str]] | None) -> dict[str, str] | None:
     if not highlight:
         return None
@@ -230,8 +238,7 @@ def _map_highlight(highlight: dict[str, list[str]] | None) -> dict[str, str] | N
     for field, fragments in highlight.items():
         if not fragments:
             continue
-        key = "title" if field == "name" else field
-        mapped[key] = html.unescape(fragments[0])
+        mapped[_highlight_field_key(field)] = html.unescape(fragments[0])
     return mapped or None
 
 
