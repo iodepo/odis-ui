@@ -14,7 +14,7 @@ See [`docs/faceted-search-plan.md`](docs/faceted-search-plan.md) and [`docs/data
 ## Quick start (development)
 
 ```bash
-git clone https://github.com/iobis/odis-ui.git
+git clone https://github.com/iodepo/odis-ui.git
 cd odis-ui
 cp .env.example .env
 docker compose up --build
