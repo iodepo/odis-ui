@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     gleaner_elasticsearch_password: str = ""
     # Comma-separated; empty = `odis` only (per-source gleaner-* indices are ignored).
     gleaner_indices: str = "odis"
+    gleaner_odiscat_index: str = "odiscat"
 
 
 settings = Settings()

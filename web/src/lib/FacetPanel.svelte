@@ -84,7 +84,7 @@
                 checked={selectedSources.includes(option.id)}
                 onchange={() => onSourceToggle(option.id)}
               />
-              <span>{sourceLabel(option.id, sourceName(option.id) ?? option.name)}</span>
+              <span title={option.id}>{sourceLabel(option.id, sourceName(option.id) ?? option.name)}</span>
               <span class="count">{formatNumber(count)}</span>
             </label>
           </li>

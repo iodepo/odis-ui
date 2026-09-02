@@ -5,6 +5,7 @@ from app.domain.errors import RecordNotFoundError
 from app.domain.search import HealthStatus, RecordResponse, SearchQuery, SearchResponse
 from app.search.elasticsearch.urls import elasticsearch_document_url
 from app.search.gleaner.ids import DEFAULT_INDICES, decode_record_id
+from app.search.gleaner.odiscat import OdiscatNames
 from app.search.gleaner.queries import build_search_body, map_document_to_item, map_search_response
 
 
@@ -29,6 +30,7 @@ class GleanerBackend:
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
         self._client = create_gleaner_client(settings)
+        self._odiscat = OdiscatNames()
         indices = [part.strip() for part in settings.gleaner_indices.split(",") if part.strip()]
         self._indices = tuple(indices) if indices else DEFAULT_INDICES
 
@@ -52,11 +54,21 @@ class GleanerBackend:
         # Source facets/filters are applied in the query body, not by switching indices.
         return ",".join(self._indices)
 
+    async def _ensure_odiscat_loaded(self) -> dict[str, str]:
+        await self._odiscat.load(self._client, self._settings.gleaner_odiscat_index)
+        return self._odiscat.as_dict()
+
     async def search(self, query: SearchQuery) -> SearchResponse:
+        source_names = await self._ensure_odiscat_loaded()
         body = build_search_body(query)
         raw = await self._client.search(index=self._index_list(), body=body)
         payload = raw.body if hasattr(raw, "body") else raw
-        return map_search_response(query, payload, document_url_for=self._document_url)
+        return map_search_response(
+            query,
+            payload,
+            document_url_for=self._document_url,
+            source_names=source_names,
+        )
 
     async def get_record(self, record_id: str, *, include_raw: bool = False) -> RecordResponse:
         decoded = decode_record_id(record_id)
@@ -69,6 +81,7 @@ class GleanerBackend:
         except NotFoundError as exc:
             raise RecordNotFoundError(record_id) from exc
 
+        source_names = await self._ensure_odiscat_loaded()
         payload = doc.body if hasattr(doc, "body") else doc
         source = payload.get("_source", {})
         es_id = payload.get("_id", doc_id)
@@ -77,6 +90,7 @@ class GleanerBackend:
             source,
             index=index,
             elasticsearch_document_url=self._document_url(index, es_id),
+            source_names=source_names,
         )
         return RecordResponse(**item.model_dump(), raw=source if include_raw else None)
 

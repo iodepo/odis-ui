@@ -10,6 +10,7 @@ def test_encode_decode_roundtrip() -> None:
 
 
 def test_map_gleaner_dataset() -> None:
+    names = {"ocean-biodiversity-information-system": "Ocean Biodiversity Information System"}
     item = map_document_to_item(
         "https://obis.org/dataset/abc",
         {
@@ -22,12 +23,28 @@ def test_map_gleaner_dataset() -> None:
             "keywords": ["Occurrence"],
         },
         index="odis",
+        source_names=names,
     )
     assert item.id.startswith("gleaner:ocean-biodiversity-information-system:")
     assert item.type == "Dataset"
     assert item.title == "Turtle tracks"
     assert item.source is not None
     assert item.source.id == "ocean-biodiversity-information-system"
+    assert item.source.name == "Ocean Biodiversity Information System"
+
+
+def test_map_gleaner_dataset_without_odiscat_name() -> None:
+    item = map_document_to_item(
+        "https://example.org/dataset/1",
+        {
+            "source": "unknown-source",
+            "id": "https://example.org/dataset/1",
+            "type": ["Dataset"],
+            "name": "Example",
+        },
+    )
+    assert item.source is not None
+    assert item.source.id == "unknown-source"
     assert item.source.name is None
 
 
@@ -88,6 +105,41 @@ def test_gleaner_type_filter_lowercase_dataset() -> None:
     body = build_search_body(SearchQuery(types=["dataset"], include_graph_fragments=True))
     type_terms = body["post_filter"]["terms"]["type"]
     assert "Dataset" in type_terms
+
+
+def test_map_search_response_source_facets_use_odiscat_names() -> None:
+    names = {
+        "ocean-biodiversity-information-system": "Ocean Biodiversity Information System",
+        "oceanexpert": "OceanExpert",
+    }
+    response = map_search_response(
+        SearchQuery(),
+        {
+            "hits": {"total": {"value": 0}, "hits": []},
+            "aggregations": {
+                "types": {"buckets": {"buckets": []}},
+                "sources": {
+                    "buckets": {
+                        "buckets": [
+                            {
+                                "key": "ocean-biodiversity-information-system",
+                                "doc_count": 5900,
+                            },
+                            {"key": "oceanexpert", "doc_count": 51916},
+                            {"key": "unknown-source", "doc_count": 3},
+                        ]
+                    }
+                },
+            },
+        },
+        source_names=names,
+    )
+    by_id = {bucket.id: bucket for bucket in response.facets.sources}
+    assert by_id["ocean-biodiversity-information-system"].name == (
+        "Ocean Biodiversity Information System"
+    )
+    assert by_id["oceanexpert"].name == "OceanExpert"
+    assert by_id["unknown-source"].name is None
 
 
 def test_map_search_response_merges_schema_type_facets() -> None:

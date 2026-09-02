@@ -242,6 +242,7 @@ def map_document_to_item(
     highlight: dict[str, list[str]] | None = None,
     elasticsearch_document_url: str | None = None,
     score: float | None = None,
+    source_names: dict[str, str] | None = None,
 ) -> SearchItem:
     source_code = _as_str(source.get("source")) or "unknown"
     doc_id = _as_str(source.get("id")) or es_id
@@ -257,7 +258,7 @@ def map_document_to_item(
         url=url,
         source=SourceRef(
             id=source_code,
-            name=None,
+            name=(source_names or {}).get(source_code),
         ),
         highlight=_map_highlight(highlight),
         spatial=extract_spatial_extent(source),
@@ -273,6 +274,7 @@ def map_search_response(
     raw: dict[str, Any],
     *,
     document_url_for: Callable[[str, str], str] | None = None,
+    source_names: dict[str, str] | None = None,
 ) -> SearchResponse:
     hits = raw.get("hits", {})
     total_value = hits.get("total", {})
@@ -294,6 +296,7 @@ def map_search_response(
                 highlight=hit.get("highlight"),
                 elasticsearch_document_url=doc_url,
                 score=hit.get("_score") or 0.0,
+                source_names=source_names,
             )
         )
 
@@ -301,10 +304,11 @@ def map_search_response(
     type_facets = _merge_type_facets(
         aggs.get("types", {}).get("buckets", {}).get("buckets", [])
     )
+    names = source_names or {}
     source_facets = [
         SourceFacetBucket(
             id=str(bucket["key"]),
-            name=None,
+            name=names.get(str(bucket["key"])),
             count=bucket["doc_count"],
         )
         for bucket in aggs.get("sources", {}).get("buckets", {}).get("buckets", [])

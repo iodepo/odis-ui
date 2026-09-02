@@ -13,5 +13,5 @@ export function formatTypeLabel(value: string): string {
 }
 
 export function sourceLabel(id: string, name?: string | null): string {
-  return name ? `${name} (${id})` : id;
+  return name ?? id;
 }
