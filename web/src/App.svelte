@@ -17,6 +17,7 @@
     readGraphFragmentsPreference,
     writeGraphFragmentsPreference,
   } from "./lib/searchSettings";
+  import { trackSearch } from "./lib/analytics";
   import "./app.css";
 
   let query = $state("");
@@ -112,6 +113,14 @@
       results = response;
       updateTypeOptions(response.facets);
       updateSourceOptions(response.facets);
+      if (params.q) {
+        trackSearch({
+          search_term: params.q,
+          result_count: response.total,
+          types: params.types,
+          sources: params.source,
+        });
+      }
     } catch (e) {
       if (generation !== searchGeneration) return;
       searchError = e instanceof Error ? e.message : "Search failed";
