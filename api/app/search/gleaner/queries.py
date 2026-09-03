@@ -17,6 +17,7 @@ from app.domain.search import (
     SourceRef,
 )
 from app.search.display import display_for
+from app.search.gleaner.odiscat import OdiscatNames
 from app.search.elasticsearch.mappings import pascal_type, raw_types_for_filter
 from app.search.elasticsearch.spatial import extract_spatial_extent
 from app.search.gleaner.ids import encode_record_id
@@ -250,7 +251,7 @@ def map_document_to_item(
     highlight: dict[str, list[str]] | None = None,
     elasticsearch_document_url: str | None = None,
     score: float | None = None,
-    source_names: dict[str, str] | None = None,
+    source_names: OdiscatNames | dict[str, str] | None = None,
 ) -> SearchItem:
     source_code = _as_str(source.get("source")) or "unknown"
     doc_id = _as_str(source.get("id")) or es_id
@@ -259,6 +260,22 @@ def map_document_to_item(
     display = display_for(source, normalized)
     summary = _as_str(source.get("description"))
     url = _as_str(source.get("url")) or _as_str(source.get("source_url"))
+
+    if isinstance(source_names, OdiscatNames):
+        entry = source_names.get(source_code)
+        source_ref = SourceRef(
+            id=source_code,
+            name=entry.name if entry else None,
+            url=entry.url if entry else None,
+            domain=entry.domain if entry else None,
+            last_indexed=entry.last_indexed if entry else None,
+        )
+    else:
+        source_ref = SourceRef(
+            id=source_code,
+            name=(source_names or {}).get(source_code),
+        )
+
     item = SearchItem(
         id=record_id,
         title=display.title,
@@ -266,10 +283,7 @@ def map_document_to_item(
         type=_display_type(normalized, source.get("type")),
         url=url,
         facts=list(display.facts),
-        source=SourceRef(
-            id=source_code,
-            name=(source_names or {}).get(source_code),
-        ),
+        source=source_ref,
         highlight=_map_highlight(highlight),
         spatial=extract_spatial_extent(source),
         elasticsearch_document_url=elasticsearch_document_url,
@@ -284,7 +298,7 @@ def map_search_response(
     raw: dict[str, Any],
     *,
     document_url_for: Callable[[str, str], str] | None = None,
-    source_names: dict[str, str] | None = None,
+    source_names: OdiscatNames | dict[str, str] | None = None,
 ) -> SearchResponse:
     hits = raw.get("hits", {})
     total_value = hits.get("total", {})
@@ -314,11 +328,13 @@ def map_search_response(
     type_facets = _merge_type_facets(
         aggs.get("types", {}).get("buckets", {}).get("buckets", [])
     )
-    names = source_names or {}
+    name_dict: dict[str, str] = (
+        source_names.as_dict() if isinstance(source_names, OdiscatNames) else (source_names or {})
+    )
     source_facets = [
         SourceFacetBucket(
             id=str(bucket["key"]),
-            name=names.get(str(bucket["key"])),
+            name=name_dict.get(str(bucket["key"])),
             count=bucket["doc_count"],
         )
         for bucket in aggs.get("sources", {}).get("buckets", {}).get("buckets", [])

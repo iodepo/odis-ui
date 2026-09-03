@@ -54,9 +54,9 @@ class GleanerBackend:
         # Source facets/filters are applied in the query body, not by switching indices.
         return ",".join(self._indices)
 
-    async def _ensure_odiscat_loaded(self) -> dict[str, str]:
+    async def _ensure_odiscat_loaded(self) -> OdiscatNames:
         await self._odiscat.load(self._client, self._settings.gleaner_odiscat_index)
-        return self._odiscat.as_dict()
+        return self._odiscat
 
     async def search(self, query: SearchQuery) -> SearchResponse:
         source_names = await self._ensure_odiscat_loaded()

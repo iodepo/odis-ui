@@ -23,6 +23,9 @@ export interface BackendsResponse {
 export interface SourceRef {
   id: string;
   name?: string | null;
+  url?: string | null;
+  domain?: string | null;
+  last_indexed?: string | null;
 }
 
 export interface BoundingBox {

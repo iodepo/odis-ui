@@ -6,6 +6,11 @@ from pydantic import BaseModel, ConfigDict, Field
 class SourceRef(BaseModel):
     id: str = Field(description="ODISCat datasource identifier")
     name: str | None = Field(default=None, description="Human-readable system name when enriched")
+    url: str | None = Field(default=None, description="Catalogue landing page URL")
+    domain: str | None = Field(default=None, description="Domain name extracted from the URL")
+    last_indexed: str | None = Field(
+        default=None, description="ISO-8601 timestamp of last indexing run"
+    )
 
 
 class BoundingBox(BaseModel):
