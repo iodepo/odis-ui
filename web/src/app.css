@@ -617,6 +617,8 @@ body {
   width: 100%;
   max-width: none;
   margin: 0;
+  padding-left: 0;
+  padding-right: 0;
   background: var(--paper-raised);
   border-bottom: 0;
 }
@@ -624,7 +626,14 @@ body {
 .network-view .network-page {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 0;
+  padding: 0 1.5rem;
+}
+
+@media (max-width: 800px) {
+  .network-view .network-page {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }
 
 .network-page h1 {
