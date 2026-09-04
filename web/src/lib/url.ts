@@ -24,8 +24,7 @@ export function parseSearchParams(url: URL): SearchParams {
 }
 
 export function buildSearchUrl(params: SearchParams): string {
-  const url = new URL(window.location.href);
-  url.search = "";
+  const url = new URL("/", window.location.origin);
 
   if (params.q) url.searchParams.set("q", params.q);
   params.types?.forEach((type) => url.searchParams.append("types", type));
