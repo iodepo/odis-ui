@@ -2,6 +2,11 @@ from elasticsearch import AsyncElasticsearch, NotFoundError
 
 from app.config import Settings
 from app.domain.errors import RecordNotFoundError
+from app.domain.network import (
+    NETWORK_STATUS_SOURCE_FIELDS,
+    NetworkStatusResponse,
+    classify_odiscat_hits,
+)
 from app.domain.search import HealthStatus, RecordResponse, SearchQuery, SearchResponse
 from app.search.elasticsearch.urls import elasticsearch_document_url
 from app.search.gleaner.ids import DEFAULT_INDICES, decode_record_id
@@ -112,6 +117,20 @@ class GleanerBackend:
             index_reachable=reachable,
             detail=detail,
         )
+
+    async def network_status(self) -> NetworkStatusResponse:
+        """Classify ODISCat nodes from summoner health fields (live, not cached)."""
+        response = await self._client.search(
+            index=self._settings.gleaner_odiscat_index,
+            body={
+                "size": 200,
+                "query": {"match_all": {}},
+                "_source": NETWORK_STATUS_SOURCE_FIELDS,
+            },
+        )
+        payload = response.body if hasattr(response, "body") else response
+        hits = payload.get("hits", {}).get("hits", [])
+        return classify_odiscat_hits(hits)
 
     async def close(self) -> None:
         await self._client.close()

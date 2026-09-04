@@ -1,5 +1,6 @@
 from typing import Protocol
 
+from app.domain.network import NetworkStatusResponse
 from app.domain.search import HealthStatus, RecordResponse, SearchQuery, SearchResponse
 
 
@@ -9,5 +10,7 @@ class SearchBackend(Protocol):
     async def get_record(self, record_id: str, *, include_raw: bool = False) -> RecordResponse: ...
 
     async def health(self) -> HealthStatus: ...
+
+    async def network_status(self) -> NetworkStatusResponse: ...
 
     async def close(self) -> None: ...

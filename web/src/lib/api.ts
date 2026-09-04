@@ -98,6 +98,24 @@ export interface SearchParams {
   include_graph_fragments?: boolean;
 }
 
+export interface NetworkNodeStatus {
+  id: string;
+  name: string;
+  url?: string | null;
+  errors: string[];
+}
+
+export interface NetworkStatusResponse {
+  updated_at: string;
+  total_nodes: number;
+  total_error_nodes: number;
+  unresponsive_count: number;
+  parsing_error_count: number;
+  summoner_error_count: number;
+  unresponsive: NetworkNodeStatus[];
+  parsing_errors: NetworkNodeStatus[];
+}
+
 async function fetchJson<T>(path: string, params?: Record<string, string | string[]>): Promise<T> {
   const url = new URL(`${API_BASE}${path}`, window.location.origin);
   if (params) {
@@ -151,6 +169,10 @@ export function getHealth(): Promise<HealthStatus> {
 
 export function getBackends(): Promise<BackendsResponse> {
   return fetchJson<BackendsResponse>("/backends");
+}
+
+export function getNetworkStatus(): Promise<NetworkStatusResponse> {
+  return fetchJson<NetworkStatusResponse>("/network-status");
 }
 
 export function search(params: SearchParams = {}): Promise<SearchResponse> {

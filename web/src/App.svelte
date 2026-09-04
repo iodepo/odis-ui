@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import FacetPanel from "./lib/FacetPanel.svelte";
   import DevBanner from "./lib/DevBanner.svelte";
+  import NetworkStatus from "./lib/NetworkStatus.svelte";
   import SearchSettings from "./lib/SearchSettings.svelte";
   import ResultCard from "./lib/ResultCard.svelte";
   import TypePillBar from "./lib/TypePillBar.svelte";
@@ -20,6 +21,13 @@
   import { trackSearch } from "./lib/analytics";
   import "./app.css";
 
+  type AppView = "search" | "network";
+
+  function viewFromPath(pathname: string): AppView {
+    return pathname === "/network" || pathname === "/network/" ? "network" : "search";
+  }
+
+  let view = $state<AppView>(viewFromPath(window.location.pathname));
   let query = $state("");
   let selectedTypes = $state<string[]>([]);
   let selectedSources = $state<string[]>([]);
@@ -139,6 +147,8 @@
   }
 
   function applyFromUrl(url: URL) {
+    view = viewFromPath(url.pathname);
+    if (view !== "search") return;
     const params = parseSearchParams(url);
     query = params.q ?? "";
     selectedTypes = params.types ?? [];
@@ -163,12 +173,16 @@
       { rootMargin: "240px" },
     );
 
-    void runSearch(false);
+    if (view === "search") {
+      void runSearch(false);
+    }
 
     const onPopState = () => {
       applyFromUrl(new URL(window.location.href));
-      page = 1;
-      void runSearch(false);
+      if (view === "search") {
+        page = 1;
+        void runSearch(false);
+      }
     };
     window.addEventListener("popstate", onPopState);
     return () => {
@@ -230,12 +244,20 @@
 
   async function handleHomeClick(event: MouseEvent) {
     event.preventDefault();
+    view = "search";
     query = "";
     selectedTypes = [];
     selectedSources = [];
     sourceOptions = [];
     page = 1;
     await runSearch();
+  }
+
+  function handleNetworkClick(event: MouseEvent) {
+    event.preventDefault();
+    if (view === "network") return;
+    view = "network";
+    history.pushState(null, "", "/network");
   }
 </script>
 
@@ -257,6 +279,14 @@
       </a>
     </div>
     <div class="page-header-actions">
+      <a
+        href="/network"
+        class="nav-text-link"
+        class:active={view === "network"}
+        onclick={handleNetworkClick}
+      >
+        Network status
+      </a>
       <a
         href="#settings"
         class="github-link"
@@ -302,80 +332,86 @@
   </div>
 </header>
 
-<div class="hero-search">
-  <div class="hero-search-inner">
-    <h1>Search ocean data and information</h1>
-    <form class="search-form" onsubmit={handleSearch}>
-      <span class="search-glyph" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="20" height="20">
-          <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2" />
-          <path
-            d="M16.5 16.5 21 21"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          />
-        </svg>
-      </span>
-      <input
-        type="search"
-        bind:value={query}
-        placeholder="Search title, description, keywords…"
-        onsearch={handleSearchBoxSearch}
-        aria-label="Search"
+{#if view === "network"}
+  <main class="page network-view">
+    <NetworkStatus />
+  </main>
+{:else}
+  <div class="hero-search">
+    <div class="hero-search-inner">
+      <h1>Search ocean data and information</h1>
+      <form class="search-form" onsubmit={handleSearch}>
+        <span class="search-glyph" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2" />
+            <path
+              d="M16.5 16.5 21 21"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+        </span>
+        <input
+          type="search"
+          bind:value={query}
+          placeholder="Search title, description, keywords…"
+          onsearch={handleSearchBoxSearch}
+          aria-label="Search"
+        />
+      </form>
+
+      <TypePillBar
+        {typeOptions}
+        {selectedTypes}
+        facets={results?.facets ?? null}
+        total={results?.total ?? null}
+        onAllTypes={handleAllTypes}
+        onTypeToggle={handleTypeToggle}
       />
-    </form>
-
-    <TypePillBar
-      {typeOptions}
-      {selectedTypes}
-      facets={results?.facets ?? null}
-      total={results?.total ?? null}
-      onAllTypes={handleAllTypes}
-      onTypeToggle={handleTypeToggle}
-    />
+    </div>
   </div>
-</div>
 
-<main class="page">
-  <div class="layout">
-    <FacetPanel
-      facets={results?.facets ?? null}
-      {typeOptions}
-      {sourceOptions}
-      {selectedTypes}
-      {selectedSources}
-      onTypeToggle={handleTypeToggle}
-      onSourceToggle={handleSourceToggle}
-    />
+  <main class="page">
+    <div class="layout">
+      <FacetPanel
+        facets={results?.facets ?? null}
+        {typeOptions}
+        {sourceOptions}
+        {selectedTypes}
+        {selectedSources}
+        onTypeToggle={handleTypeToggle}
+        onSourceToggle={handleSourceToggle}
+      />
 
-    <section class="results">
-      {#if searchError}
-        <p class="error">{searchError}</p>
-      {/if}
-
-      {#if results}
-        <p class="results-meta">{formatNumber(results.total)} result{results.total === 1 ? "" : "s"}</p>
-        {#each results.items as item (item.id)}
-          <ResultCard {item} />
-        {/each}
-
-        {#if hasMore}
-          <div class="scroll-sentinel" bind:this={scrollSentinel} aria-hidden="true"></div>
+      <section class="results">
+        {#if searchError}
+          <p class="error">{searchError}</p>
         {/if}
 
-        {#if loadingMore}
-          <p class="results-meta loading-more">Loading more…</p>
-        {:else if !hasMore && results.items.length > 0}
-          <p class="results-meta end-of-results">End of results</p>
+        {#if results}
+          <p class="results-meta">{formatNumber(results.total)} result{results.total === 1 ? "" : "s"}</p>
+          {#each results.items as item (item.id)}
+            <ResultCard {item} />
+          {/each}
+
+          {#if hasMore}
+            <div class="scroll-sentinel" bind:this={scrollSentinel} aria-hidden="true"></div>
+          {/if}
+
+          {#if loadingMore}
+            <p class="results-meta loading-more">Loading more…</p>
+          {:else if !hasMore && results.items.length > 0}
+            <p class="results-meta end-of-results">End of results</p>
+          {/if}
+        {:else if loading}
+          <p class="results-meta">Searching…</p>
         {/if}
-      {:else if loading}
-        <p class="results-meta">Searching…</p>
-      {/if}
-    </section>
-  </div>
-</main>
+      </section>
+    </div>
+  </main>
+{/if}
 
 <SearchSettings
   open={settingsOpen}

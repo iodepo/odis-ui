@@ -1,3 +1,4 @@
+from app.domain.network import NetworkNodeStatus, NetworkStatusResponse
 from app.domain.search import (
     FacetBucket,
     HealthStatus,
@@ -39,6 +40,30 @@ class FakeSearchBackend:
             page=1,
             size=20,
         )
+        self.network_status_response = NetworkStatusResponse(
+            updated_at="2026-09-04T17:00:00+00:00",
+            total_nodes=3,
+            total_error_nodes=2,
+            unresponsive_count=1,
+            parsing_error_count=1,
+            summoner_error_count=0,
+            unresponsive=[
+                NetworkNodeStatus(
+                    id="unresponsive-node",
+                    name="Unresponsive Node",
+                    url="https://example.org/sitemap.xml",
+                    errors=["timed out"],
+                )
+            ],
+            parsing_errors=[
+                NetworkNodeStatus(
+                    id="parsing-node",
+                    name="Parsing Node",
+                    url="https://example.org/data/sitemap.xml",
+                    errors=["no application/ld+json script tags found"],
+                )
+            ],
+        )
 
     async def search(self, query: SearchQuery) -> SearchResponse:
         self.last_query = query
@@ -61,6 +86,9 @@ class FakeSearchBackend:
 
     async def health(self) -> HealthStatus:
         return self.health_status
+
+    async def network_status(self) -> NetworkStatusResponse:
+        return self.network_status_response
 
     async def close(self) -> None:
         pass
