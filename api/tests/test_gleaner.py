@@ -102,6 +102,20 @@ def test_gleaner_search_body_primary_type_filter_by_default() -> None:
     assert any("terms" in clause and "type" in clause["terms"] for clause in filters)
 
 
+def test_gleaner_search_body_exact_id_term_filter() -> None:
+    uri = "https://obis.org/dataset/abc"
+    body = build_search_body(SearchQuery(id=uri))
+    filters = body["query"]["bool"]["filter"]
+    assert {"term": {"id": uri}} in filters
+    assert any("terms" in clause and "type" in clause["terms"] for clause in filters)
+
+
+def test_gleaner_search_body_exact_id_with_graph_fragments() -> None:
+    uri = "https://example.org/geo/1"
+    body = build_search_body(SearchQuery(id=uri, include_graph_fragments=True))
+    assert body["query"]["bool"]["filter"] == [{"term": {"id": uri}}]
+
+
 def test_gleaner_type_filter_preserves_pascal_case() -> None:
     body = build_search_body(SearchQuery(types=["HowToStep"], include_graph_fragments=True))
     assert body["post_filter"] == {"terms": {"type": ["HowToStep", "schema:HowToStep"]}}

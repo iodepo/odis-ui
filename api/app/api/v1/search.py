@@ -20,6 +20,10 @@ async def search(
         str | None,
         Query(description="Search title, description, and keywords"),
     ] = None,
+    id: Annotated[
+        str | None,
+        Query(description="Exact match on top-level document id (JSON-LD @id URI)"),
+    ] = None,
     types: Annotated[
         list[str] | None,
         Query(description="Record type filters (repeat param for multiple values)"),
@@ -41,6 +45,7 @@ async def search(
     """Search records in the odis_metadata index with optional type and source filters."""
     query = SearchQuery(
         q=q,
+        id=id,
         types=types or [],
         sources=source or [],
         sort=sort.value,

@@ -32,3 +32,14 @@ async def test_search_include_graph_fragments_param(
     assert response.status_code == 200
     assert fake_backend.last_query is not None
     assert fake_backend.last_query.include_graph_fragments is True
+
+
+@pytest.mark.asyncio
+async def test_search_exact_id_param(
+    client: AsyncClient, fake_backend: FakeSearchBackend
+) -> None:
+    uri = "https://obis.org/dataset/abc"
+    response = await client.get("/api/v1/search", params={"id": uri})
+    assert response.status_code == 200
+    assert fake_backend.last_query is not None
+    assert fake_backend.last_query.id == uri

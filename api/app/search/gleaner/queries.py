@@ -69,11 +69,14 @@ def _type_values_for_filter(types: list[str]) -> list[str]:
 
 
 def _base_filters(query: SearchQuery) -> list[dict[str, Any]]:
-    if query.include_graph_fragments:
-        return []
-    return [
-        {"terms": {"type": _type_values_for_filter(list(GLEANER_PRIMARY_TYPES))}},
-    ]
+    filters: list[dict[str, Any]] = []
+    if not query.include_graph_fragments:
+        filters.append(
+            {"terms": {"type": _type_values_for_filter(list(GLEANER_PRIMARY_TYPES))}},
+        )
+    if query.id:
+        filters.append({"term": {"id": query.id}})
+    return filters
 
 
 def _type_facet_filters(query: SearchQuery) -> list[dict[str, Any]]:
