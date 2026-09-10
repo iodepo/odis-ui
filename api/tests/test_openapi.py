@@ -11,3 +11,9 @@ async def test_openapi_json(client: AsyncClient) -> None:
     assert "/api/v1/search" in spec["paths"]
     assert "/api/v1/health" in spec["paths"]
     assert "/api/v1/network-status" in spec["paths"]
+
+
+@pytest.mark.asyncio
+async def test_swagger_ui_at_api_root(client: AsyncClient) -> None:
+    response = await client.get("/api")
+    assert response.status_code == 200

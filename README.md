@@ -24,7 +24,7 @@ Open http://localhost:8080
 
 - Frontend: http://localhost:8080/
 - API health: http://localhost:8080/api/v1/health
-- API docs (Swagger): http://localhost:8080/api/docs
+- API docs (Swagger): http://localhost:8080/api
 - API docs (ReDoc): http://localhost:8080/api/redoc
 
 ## Production
