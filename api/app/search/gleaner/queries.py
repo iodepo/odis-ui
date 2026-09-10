@@ -25,6 +25,12 @@ from app.search.gleaner.ids import encode_record_id
 # Gleaner also indexes Course; keep ODIS PRIMARY_RECORD_TYPES unchanged.
 GLEANER_PRIMARY_TYPES: tuple[str, ...] = (*PRIMARY_RECORD_TYPES, "course")
 
+# Types exposed in the default type facet / pill bar. Multi-typed JSON-LD
+# (e.g. Dataset + a catalogue-specific type) otherwise pollutes facets.
+FACET_RECORD_TYPES: frozenset[str] = frozenset(
+    (*GLEANER_PRIMARY_TYPES, "boattrip", "service")
+)
+
 SEARCH_SOURCE_FIELDS = [
     "id",
     "name",
@@ -210,8 +216,17 @@ def _display_type(normalized: str | None, raw: Any) -> str:
     return _strip_type_prefix(values[0]) if values else "Record"
 
 
-def _merge_type_facets(buckets: list[dict[str, Any]]) -> list[FacetBucket]:
-    """Collapse schema.org prefix variants (Dataset vs schema:Dataset) into one facet."""
+def _merge_type_facets(
+    buckets: list[dict[str, Any]],
+    *,
+    include_graph_fragments: bool = False,
+) -> list[FacetBucket]:
+    """Collapse schema.org prefix variants (Dataset vs schema:Dataset) into one facet.
+
+    By default only primary searchable types are returned so secondary @types
+    on multi-typed documents (catalogue-specific classes, graph fragments)
+    do not appear as filters. Pass include_graph_fragments=True to keep all.
+    """
     counts: dict[str, int] = {}
     for bucket in buckets:
         key = bucket.get("key")
@@ -219,6 +234,8 @@ def _merge_type_facets(buckets: list[dict[str, Any]]) -> list[FacetBucket]:
             continue
         canonical = _strip_type_prefix(str(key)).lower()
         if not canonical:
+            continue
+        if not include_graph_fragments and canonical not in FACET_RECORD_TYPES:
             continue
         counts[canonical] = counts.get(canonical, 0) + int(bucket["doc_count"])
     return [
@@ -329,7 +346,8 @@ def map_search_response(
 
     aggs = raw.get("aggregations", {})
     type_facets = _merge_type_facets(
-        aggs.get("types", {}).get("buckets", {}).get("buckets", [])
+        aggs.get("types", {}).get("buckets", {}).get("buckets", []),
+        include_graph_fragments=query.include_graph_fragments,
     )
     name_dict: dict[str, str] = (
         source_names.as_dict() if isinstance(source_names, OdiscatNames) else (source_names or {})

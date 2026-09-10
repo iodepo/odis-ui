@@ -162,33 +162,34 @@ def test_map_search_response_source_facets_use_odiscat_names() -> None:
     assert by_id["unknown-source"].name is None
 
 
+_TYPE_FACET_BUCKETS = [
+    {"key": "Dataset", "doc_count": 10},
+    {"key": "schema:Dataset", "doc_count": 3},
+    {"key": "Person", "doc_count": 5},
+    {"key": "schema:Organization", "doc_count": 2},
+    {"key": "Organization", "doc_count": 4},
+    {"key": "ResearchProject", "doc_count": 7},
+    {"key": "schema:ResearchProject", "doc_count": 1},
+    {"key": "DataCatalog", "doc_count": 4},
+    {"key": "schema:DataCatalog", "doc_count": 1},
+    {"key": "ContactPoint", "doc_count": 2},
+    {"key": "schema:ContactPoint", "doc_count": 1},
+    {"key": "DataDownload", "doc_count": 1},
+    {"key": "schema:DataDownload", "doc_count": 1},
+    {"key": "Thing", "doc_count": 1},
+    {"key": "schema:Thing", "doc_count": 2},
+    {"key": "InputMetadataDescription", "doc_count": 893},
+    {"key": "BoatTrip", "doc_count": 38},
+]
+
+
 def test_map_search_response_merges_schema_type_facets() -> None:
     response = map_search_response(
         SearchQuery(),
         {
             "hits": {"total": {"value": 0}, "hits": []},
             "aggregations": {
-                "types": {
-                    "buckets": {
-                        "buckets": [
-                            {"key": "Dataset", "doc_count": 10},
-                            {"key": "schema:Dataset", "doc_count": 3},
-                            {"key": "Person", "doc_count": 5},
-                            {"key": "schema:Organization", "doc_count": 2},
-                            {"key": "Organization", "doc_count": 4},
-                            {"key": "ResearchProject", "doc_count": 7},
-                            {"key": "schema:ResearchProject", "doc_count": 1},
-                            {"key": "DataCatalog", "doc_count": 4},
-                            {"key": "schema:DataCatalog", "doc_count": 1},
-                            {"key": "ContactPoint", "doc_count": 2},
-                            {"key": "schema:ContactPoint", "doc_count": 1},
-                            {"key": "DataDownload", "doc_count": 1},
-                            {"key": "schema:DataDownload", "doc_count": 1},
-                            {"key": "Thing", "doc_count": 1},
-                            {"key": "schema:Thing", "doc_count": 2},
-                        ]
-                    }
-                },
+                "types": {"buckets": {"buckets": _TYPE_FACET_BUCKETS}},
                 "sources": {"buckets": {"buckets": []}},
             },
         },
@@ -199,17 +200,33 @@ def test_map_search_response_merges_schema_type_facets() -> None:
         "ResearchProject": 8,
         "Organization": 6,
         "Person": 5,
-        "DataCatalog": 5,
-        "Thing": 3,
-        "ContactPoint": 3,
-        "DataDownload": 2,
+        "BoatTrip": 38,
     }
     assert "schema:Dataset" not in by_value
+    assert "InputMetadataDescription" not in by_value
+    assert "DataCatalog" not in by_value
     assert [bucket.value for bucket in response.facets.types][:3] == [
+        "BoatTrip",
         "Dataset",
         "ResearchProject",
-        "Organization",
     ]
+
+
+def test_map_search_response_keeps_fragment_type_facets_when_requested() -> None:
+    response = map_search_response(
+        SearchQuery(include_graph_fragments=True),
+        {
+            "hits": {"total": {"value": 0}, "hits": []},
+            "aggregations": {
+                "types": {"buckets": {"buckets": _TYPE_FACET_BUCKETS}},
+                "sources": {"buckets": {"buckets": []}},
+            },
+        },
+    )
+    by_value = {bucket.value: bucket.count for bucket in response.facets.types}
+    assert by_value["Dataset"] == 13
+    assert by_value["DataCatalog"] == 5
+    assert by_value["Inputmetadatadescription"] == 893
 
 
 def test_map_highlight_renames_fields() -> None:
