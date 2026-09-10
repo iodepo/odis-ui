@@ -164,6 +164,84 @@ def test_dataset_unresolved_license_reference_is_omitted() -> None:
     assert labels["Temporal coverage"].value == "2000/2023"
 
 
+def test_dataset_distribution_links() -> None:
+    display = display_for(
+        {
+            "type": ["Dataset"],
+            "name": "BODC Series 1916894",
+            "jsonld": {
+                "distribution": [
+                    {
+                        "@type": "DataDownload",
+                        "contentUrl": "https://bodc.ac.uk/data/open_download/series/1916894/odv/",
+                        "encodingFormat": "text/x-odv",
+                    },
+                    {
+                        "@type": "DataDownload",
+                        "contentUrl": "https://bodc.ac.uk/data/open_download/series/1916894/odvnc/",
+                        "encodingFormat": "application/netcdf",
+                    },
+                ],
+            },
+        },
+        "dataset",
+    )
+    distributions = [fact for fact in display.facts if fact.label == "Distribution"]
+    assert len(distributions) == 1
+    fact = distributions[0]
+    assert fact.value == "ODV, NetCDF"
+    assert fact.href is None
+    assert [(link.value, link.href) for link in fact.links] == [
+        ("ODV", "https://bodc.ac.uk/data/open_download/series/1916894/odv/"),
+        ("NetCDF", "https://bodc.ac.uk/data/open_download/series/1916894/odvnc/"),
+    ]
+
+
+def test_dataset_distribution_skips_unresolved_reference() -> None:
+    display = display_for(
+        {
+            "type": ["Dataset"],
+            "name": "Partial metadata",
+            "jsonld": {
+                "distribution": [
+                    {"@id": "https://w3id.org/marco-bolo/mbo_download_ref"},
+                    {
+                        "@type": "DataDownload",
+                        "contentUrl": "https://example.org/data.csv",
+                        "encodingFormat": "text/csv",
+                    },
+                ],
+            },
+        },
+        "dataset",
+    )
+    distributions = [fact for fact in display.facts if fact.label == "Distribution"]
+    assert len(distributions) == 1
+    assert distributions[0].value == "CSV"
+    assert distributions[0].href == "https://example.org/data.csv"
+    assert [(link.value, link.href) for link in distributions[0].links] == [
+        ("CSV", "https://example.org/data.csv"),
+    ]
+
+
+def test_dataset_distribution_string_url() -> None:
+    display = display_for(
+        {
+            "type": ["Dataset"],
+            "name": "Simple dataset",
+            "jsonld": {"distribution": "https://example.org/files/data.zip"},
+        },
+        "dataset",
+    )
+    distributions = [fact for fact in display.facts if fact.label == "Distribution"]
+    assert len(distributions) == 1
+    assert distributions[0].value == "data.zip"
+    assert distributions[0].href == "https://example.org/files/data.zip"
+    assert [(link.value, link.href) for link in distributions[0].links] == [
+        ("data.zip", "https://example.org/files/data.zip"),
+    ]
+
+
 def test_dataset_facts_via_map_document_to_item() -> None:
     item = map_document_to_item(
         "https://example.org/dataset/1",

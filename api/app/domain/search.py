@@ -36,10 +36,19 @@ class SpatialExtent(BaseModel):
     )
 
 
+class DisplayLink(BaseModel):
+    value: str
+    href: str
+
+
 class DisplayFact(BaseModel):
     label: str
     value: str
     href: str | None = None
+    links: list[DisplayLink] = Field(
+        default_factory=list,
+        description="Multiple linked values for a single fact (e.g. distribution downloads)",
+    )
 
 
 class SearchItem(BaseModel):

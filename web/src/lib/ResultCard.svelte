@@ -114,11 +114,16 @@
   {/if}
   {#if facts.length}
     <dl class="facts">
-      {#each facts as fact (fact.label + fact.value)}
+      {#each facts as fact (fact.label + fact.value + (fact.href ?? ""))}
         <div>
           <dt>{fact.label}</dt>
           <dd>
-            {#if fact.href}
+            {#if fact.links?.length}
+              {#each fact.links as link, i (link.href)}
+                {#if i > 0}{" "}{/if}
+                <a href={link.href} target="_blank" rel="noopener noreferrer">{link.value}</a>
+              {/each}
+            {:else if fact.href}
               <a href={fact.href} target="_blank" rel="noopener noreferrer">{fact.value}</a>
             {:else}
               {fact.value}

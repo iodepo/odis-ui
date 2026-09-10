@@ -45,10 +45,16 @@ export interface SpatialExtent {
   points: GeoPoint[];
 }
 
+export interface DisplayLink {
+  value: string;
+  href: string;
+}
+
 export interface DisplayFact {
   label: string;
   value: string;
   href?: string | null;
+  links?: DisplayLink[] | null;
 }
 
 export interface SearchItem {

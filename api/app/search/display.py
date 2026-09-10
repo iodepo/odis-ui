@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import urlparse
 
-from app.domain.search import DisplayFact
+from app.domain.search import DisplayFact, DisplayLink
 
 UNTITLED = "(untitled)"
 _SCHEMA_PREFIXES = ("", "schema:")
@@ -174,6 +174,67 @@ def _temporal_coverage_label(value: Any) -> str | None:
     return text.replace("/..", " – present")
 
 
+_ENCODING_FORMAT_LABELS = {
+    "text/csv": "CSV",
+    "text/tab-separated-values": "TSV",
+    "text/plain": "TXT",
+    "text/html": "HTML",
+    "text/x-odv": "ODV",
+    "application/json": "JSON",
+    "application/ld+json": "JSON-LD",
+    "application/xml": "XML",
+    "application/pdf": "PDF",
+    "application/zip": "ZIP",
+    "application/gzip": "GZIP",
+    "application/netcdf": "NetCDF",
+    "application/x-netcdf": "NetCDF",
+    "application/geo+json": "GeoJSON",
+    "image/png": "PNG",
+    "image/jpeg": "JPEG",
+    "image/tiff": "TIFF",
+}
+
+
+def _encoding_format_label(value: Any) -> str | None:
+    text = _text(value)
+    if not text:
+        return None
+    known = _ENCODING_FORMAT_LABELS.get(text.lower())
+    if known:
+        return known
+    if "/" in text:
+        subtype = text.rsplit("/", 1)[-1]
+        subtype = subtype.removeprefix("x-").removeprefix("vnd.")
+        if subtype:
+            return subtype.upper() if len(subtype) <= 6 else subtype
+    return text
+
+
+def _distribution_link(raw: Any) -> DisplayLink | None:
+    if isinstance(raw, dict):
+        href = None
+        for key in ("contentUrl", "url"):
+            href = _url_href(_lookup(raw, key))
+            if href:
+                break
+        if not href:
+            return None
+
+        label = (
+            _encoding_format_label(_lookup(raw, "encodingFormat"))
+            or _entity_label(raw)
+            or urlparse(href).path.rstrip("/").split("/")[-1]
+            or "Download"
+        )
+        return DisplayLink(value=label, href=href)
+
+    href = _url_href(raw)
+    if not href:
+        return None
+    value = urlparse(href).path.rstrip("/").split("/")[-1] or href
+    return DisplayLink(value=value, href=href)
+
+
 def _contributor_label(value: Any) -> str | None:
     if isinstance(value, dict):
         label = _entity_label(value)
@@ -253,6 +314,23 @@ def dataset_presenter(source: dict[str, Any]) -> RecordDisplay:
     temporal = _temporal_coverage_label(get_property(source, "temporalCoverage"))
     if temporal:
         facts.append(DisplayFact(label="Temporal coverage", value=temporal))
+
+    distribution_links: list[DisplayLink] = []
+    seen_hrefs: set[str] = set()
+    for raw_distribution in _as_list(get_property(source, "distribution")):
+        link = _distribution_link(raw_distribution)
+        if link and link.href not in seen_hrefs:
+            seen_hrefs.add(link.href)
+            distribution_links.append(link)
+    if distribution_links:
+        facts.append(
+            DisplayFact(
+                label="Distribution",
+                value=", ".join(link.value for link in distribution_links),
+                href=distribution_links[0].href if len(distribution_links) == 1 else None,
+                links=distribution_links,
+            )
+        )
 
     return RecordDisplay(title=title, facts=tuple(facts))
 
