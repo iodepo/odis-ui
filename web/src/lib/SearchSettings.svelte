@@ -2,15 +2,19 @@
   type Props = {
     open: boolean;
     includeGraphFragments: boolean;
+    showRelatedRecords: boolean;
     onClose: () => void;
     onGraphFragmentsChange: (enabled: boolean) => void;
+    onRelatedRecordsChange: (enabled: boolean) => void;
   };
 
   let {
     open,
     includeGraphFragments,
+    showRelatedRecords,
     onClose,
     onGraphFragmentsChange,
+    onRelatedRecordsChange,
   }: Props = $props();
 
   let dialogEl: HTMLDialogElement | undefined = $state();
@@ -37,19 +41,38 @@
       <button type="submit" class="search-settings-close" aria-label="Close settings">×</button>
     </header>
 
-    <label class="search-settings-option">
-      <input
-        type="checkbox"
-        checked={includeGraphFragments}
-        onchange={(event) => onGraphFragmentsChange((event.currentTarget as HTMLInputElement).checked)}
-      />
-      <span>
-        <strong>Include graph fragments</strong>
-        <span class="search-settings-hint">
-          Show structural JSON-LD nodes (e.g. DataDownload, Place, GeoShape). Many hits have no
-          title and are intended for harvest debugging.
+    <div class="search-settings-options">
+      <label class="search-settings-option">
+        <input
+          type="checkbox"
+          checked={includeGraphFragments}
+          onchange={(event) =>
+            onGraphFragmentsChange((event.currentTarget as HTMLInputElement).checked)}
+        />
+        <span>
+          <strong>Include graph fragments</strong>
+          <span class="search-settings-hint">
+            Show structural JSON-LD nodes (e.g. DataDownload, Place, GeoShape). Many hits have no
+            title and are intended for harvest debugging.
+          </span>
         </span>
-      </span>
-    </label>
+      </label>
+
+      <label class="search-settings-option">
+        <input
+          type="checkbox"
+          checked={showRelatedRecords}
+          onchange={(event) =>
+            onRelatedRecordsChange((event.currentTarget as HTMLInputElement).checked)}
+        />
+        <span>
+          <strong>Show related records</strong>
+          <span class="search-settings-hint">
+            Add a “Related records” link on each result that looks up linked @id values in the
+            index.
+          </span>
+        </span>
+      </label>
+    </div>
   </form>
 </dialog>

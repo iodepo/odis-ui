@@ -16,7 +16,9 @@
   import { buildSearchUrl, parseSearchParams, toggleValue } from "./lib/url";
   import {
     readGraphFragmentsPreference,
+    readRelatedRecordsPreference,
     writeGraphFragmentsPreference,
+    writeRelatedRecordsPreference,
   } from "./lib/searchSettings";
   import { trackSearch } from "./lib/analytics";
   import "./app.css";
@@ -41,6 +43,7 @@
   let typeOptions = $state<string[]>([]);
   let sourceOptions = $state<{ id: string; name?: string | null }[]>([]);
   let includeGraphFragments = $state(readGraphFragmentsPreference());
+  let showRelatedRecords = $state(readRelatedRecordsPreference());
   let settingsOpen = $state(false);
   let searchGeneration = 0;
 
@@ -242,6 +245,11 @@
     await runSearch();
   }
 
+  function handleRelatedRecordsChange(enabled: boolean) {
+    showRelatedRecords = enabled;
+    writeRelatedRecordsPreference(enabled);
+  }
+
   async function handleHomeClick(event: MouseEvent) {
     event.preventDefault();
     view = "search";
@@ -393,7 +401,7 @@
         {#if results}
           <p class="results-meta">{formatNumber(results.total)} result{results.total === 1 ? "" : "s"}</p>
           {#each results.items as item (item.id)}
-            <ResultCard {item} />
+            <ResultCard {item} showRelatedLink={showRelatedRecords} />
           {/each}
 
           {#if hasMore}
@@ -416,6 +424,8 @@
 <SearchSettings
   open={settingsOpen}
   {includeGraphFragments}
+  {showRelatedRecords}
   onClose={() => (settingsOpen = false)}
   onGraphFragmentsChange={handleGraphFragmentsChange}
+  onRelatedRecordsChange={handleRelatedRecordsChange}
 />

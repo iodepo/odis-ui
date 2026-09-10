@@ -1,5 +1,6 @@
 <script lang="ts">
   import HighlightText from "./HighlightText.svelte";
+  import RelatedRecordsDialog from "./RelatedRecordsDialog.svelte";
   import SpatialExtentMap from "./SpatialExtentMap.svelte";
   import SummaryText from "./SummaryText.svelte";
   import TypeBadge from "./TypeBadge.svelte";
@@ -8,9 +9,10 @@
 
   interface Props {
     item: SearchItem;
+    showRelatedLink?: boolean;
   }
 
-  let { item }: Props = $props();
+  let { item, showRelatedLink = true }: Props = $props();
 
   const theme = $derived(resolveTypeTheme(item.type));
   const facts = $derived(item.facts ?? []);
@@ -19,6 +21,7 @@
 
   let popoverEl: HTMLSpanElement | null = $state(null);
   let rafId: number | null = null;
+  let relatedOpen = $state(false);
 
   function updatePopoverPosition(e: PointerEvent) {
     const x = e.clientX + 12;
@@ -137,6 +140,11 @@
     {#if item.url}
       <a class="record-link" href={item.url} target="_blank" rel="noopener noreferrer">URL</a>
     {/if}
+    {#if showRelatedLink}
+      <button type="button" class="record-link" onclick={() => (relatedOpen = true)}>
+        Related records
+      </button>
+    {/if}
     <a class="record-link" href={recordUrl(item.id)} target="_blank" rel="noopener noreferrer">
       API record
     </a>
@@ -151,3 +159,11 @@
     {/if}
   </div>
 </article>
+
+{#if showRelatedLink && relatedOpen}
+  <RelatedRecordsDialog
+    open={relatedOpen}
+    {item}
+    onClose={() => (relatedOpen = false)}
+  />
+{/if}

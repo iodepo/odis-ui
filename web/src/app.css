@@ -542,10 +542,171 @@ body {
   font-size: 0.8rem;
   color: var(--primary);
   text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 .result-card .record-link:hover {
   text-decoration: underline;
+}
+
+.related-records-dialog {
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 0;
+  /* Match the search results column (~1120 page − 260 sidebar − gap). */
+  width: min(50rem, calc(100vw - 2rem));
+  max-height: min(90vh, calc(100vh - 2rem));
+  box-shadow: 0 12px 40px rgba(33, 33, 33, 0.18);
+}
+
+.related-records-dialog::backdrop {
+  background: rgba(33, 33, 33, 0.35);
+}
+
+.related-records-panel {
+  margin: 0;
+  padding: 1rem 1.25rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  max-height: min(90vh, calc(100vh - 2rem));
+  overflow: auto;
+}
+
+.related-records-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.related-records-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.related-records-close {
+  border: 0;
+  background: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.related-records-source {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.related-graph {
+  margin: 0;
+  padding: 0.25rem 0.25rem 0.1rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+}
+
+.related-graph svg {
+  display: block;
+  width: min(100%, 26rem);
+  height: auto;
+  max-height: 11rem;
+  margin: 0 auto;
+  cursor: grab;
+}
+
+.related-graph svg:active {
+  cursor: grabbing;
+}
+
+.related-graph-edge {
+  stroke: var(--line-strong);
+  stroke-width: 1.25;
+  stroke-opacity: 0.9;
+}
+
+.related-graph-node circle {
+  cursor: grab;
+}
+
+.related-graph-node text {
+  fill: var(--ink-soft);
+  font-size: 7px;
+  font-weight: 500;
+  pointer-events: none;
+  user-select: none;
+}
+
+.related-graph-node.hub text {
+  fill: var(--ink);
+  font-weight: 600;
+  font-size: 7.5px;
+}
+
+.related-graph-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  list-style: none;
+  margin: 0.1rem 0.4rem 0.2rem;
+  padding: 0;
+}
+
+.related-graph-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+
+.related-graph-swatch {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  border: 1.5px solid;
+  flex-shrink: 0;
+}
+
+.related-graph figcaption {
+  margin: 0.15rem 0.35rem 0.25rem;
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+.related-records-status {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+.related-records-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.related-records-results .result-card {
+  margin-bottom: 0.65rem;
+}
+
+.related-records-results .result-card:last-child {
+  margin-bottom: 0;
+}
+
+.related-records-meta {
+  width: 100%;
+  font-size: 0.78rem;
+  color: var(--ink-faint);
 }
 
 .error {
@@ -591,6 +752,12 @@ body {
   line-height: 1;
   cursor: pointer;
   color: var(--ink-soft);
+}
+
+.search-settings-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
 .search-settings-option {

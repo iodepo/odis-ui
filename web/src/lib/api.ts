@@ -90,12 +90,17 @@ export interface SearchResponse {
 
 export interface SearchParams {
   q?: string;
+  id?: string;
   types?: string[];
   source?: string[];
   sort?: "relevance" | "title";
   page?: number;
   size?: number;
   include_graph_fragments?: boolean;
+}
+
+export interface RecordResponse extends SearchItem {
+  raw?: Record<string, unknown> | null;
 }
 
 export interface NetworkNodeStatus {
@@ -163,6 +168,13 @@ export function recordUrl(id: string): string {
   return `${API_BASE}/records/${encodeURIComponent(id)}`;
 }
 
+export function getRecord(id: string, raw = false): Promise<RecordResponse> {
+  return fetchJson<RecordResponse>(
+    `/records/${encodeURIComponent(id)}`,
+    raw ? { raw: "1" } : undefined,
+  );
+}
+
 export function getHealth(): Promise<HealthStatus> {
   return fetchJson<HealthStatus>("/health");
 }
@@ -178,6 +190,7 @@ export function getNetworkStatus(): Promise<NetworkStatusResponse> {
 export function search(params: SearchParams = {}): Promise<SearchResponse> {
   const query: Record<string, string | string[]> = {};
   if (params.q) query.q = params.q;
+  if (params.id) query.id = params.id;
   if (params.types?.length) query.types = params.types;
   if (params.source?.length) query.source = params.source;
   if (params.sort) query.sort = params.sort;
