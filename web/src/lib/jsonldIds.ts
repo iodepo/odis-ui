@@ -24,6 +24,23 @@ export function extractAtIds(value: unknown, found: Set<string> = new Set()): st
   return [...found];
 }
 
+/**
+ * TEMPORARY: OceanExpert OBIS links use `/institution/N` while indexed
+ * OceanExpert records use `/institute/N`. Expand both so related-record
+ * lookup can find either form. Remove once identifiers are aligned upstream.
+ */
+function withOceanExpertIdAliases(ids: string[]): string[] {
+  const expanded = new Set(ids);
+  for (const id of ids) {
+    if (id.includes("oceanexpert.org/institution/")) {
+      expanded.add(id.replace("/institution/", "/institute/"));
+    } else if (id.includes("oceanexpert.org/institute/")) {
+      expanded.add(id.replace("/institute/", "/institution/"));
+    }
+  }
+  return [...expanded];
+}
+
 /** Prefer `jsonld` when present; otherwise walk the full raw document. */
 export function extractRelatedIds(
   raw: Record<string, unknown> | null | undefined,
@@ -34,7 +51,7 @@ export function extractRelatedIds(
     raw.jsonld !== undefined && raw.jsonld !== null
       ? raw.jsonld
       : raw;
-  const ids = extractAtIds(root);
+  const ids = withOceanExpertIdAliases(extractAtIds(root));
   const skip = new Set<string>();
   if (selfId) skip.add(selfId);
   if (typeof raw.id === "string" && raw.id.trim()) skip.add(raw.id.trim());
