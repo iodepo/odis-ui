@@ -345,7 +345,7 @@
         target="_blank"
         rel="noopener noreferrer"
       >
-        <img class="odis-mark" src="/odis-mark.png" width="20" height="20" alt="" />
+        <img class="odis-mark" src="/odis-mark.png" width="22" height="22" alt="" />
       </a>
     </div>
   </div>
