@@ -323,9 +323,20 @@
         </svg>
       </a>
       <a
+        href="https://odis.org/"
+        class="github-link"
+        aria-label="ODIS project website"
+        title="ODIS project website"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <img class="odis-mark" src="/odis-mark.png" width="20" height="20" alt="" />
+      </a>
+      <a
         href="https://github.com/iobis/odis-ui"
         class="github-link"
         aria-label="View source on GitHub"
+        title="View source on GitHub"
         target="_blank"
         rel="noopener noreferrer"
       >
