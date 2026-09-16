@@ -1,11 +1,18 @@
 from app.domain.search import SearchQuery
 from app.search.gleaner.ids import decode_record_id, encode_record_id
 from app.search.gleaner.queries import (
+    DATASET_TYPE_BOOST,
+    HAS_DESCRIPTION_BOOST,
+    HAS_KEYWORDS_BOOST,
     _map_highlight,
     build_search_body,
     map_document_to_item,
     map_search_response,
 )
+
+
+def _bool_query(body: dict) -> dict:
+    return body["query"]["function_score"]["query"]["bool"]
 
 
 def test_encode_decode_roundtrip() -> None:
@@ -85,27 +92,41 @@ def test_gleaner_search_body_filters_and_aggs() -> None:
     assert body["post_filter"]["bool"]["filter"]
     assert "types" in body["aggs"]
     assert "sources" in body["aggs"]
-    assert body["query"]["bool"]["must"][0]["multi_match"]["query"] == "coral"
+    assert _bool_query(body)["must"][0]["multi_match"]["query"] == "coral"
     assert body["track_total_hits"] is True
     assert body["highlight"]["fields"]["description"] == {"number_of_fragments": 0}
 
 
+def test_gleaner_search_body_prefers_datasets_and_richer_records() -> None:
+    body = build_search_body(SearchQuery())
+    scored = body["query"]["function_score"]
+    assert scored["score_mode"] == "multiply"
+    assert scored["boost_mode"] == "multiply"
+    assert _bool_query(body)["must"] == [{"match_all": {}}]
+
+    weights = {fn["weight"]: fn["filter"] for fn in scored["functions"]}
+    assert weights[DATASET_TYPE_BOOST]["terms"]["type"]
+    assert "Dataset" in weights[DATASET_TYPE_BOOST]["terms"]["type"]
+    assert weights[HAS_DESCRIPTION_BOOST] == {"exists": {"field": "description"}}
+    assert weights[HAS_KEYWORDS_BOOST] == {"exists": {"field": "keywords"}}
+
+
 def test_gleaner_search_body_omits_primary_type_filter_when_graph_fragments_enabled() -> None:
     body = build_search_body(SearchQuery(include_graph_fragments=True))
-    filters = body["query"]["bool"].get("filter", [])
+    filters = _bool_query(body).get("filter", [])
     assert filters == []
 
 
 def test_gleaner_search_body_primary_type_filter_by_default() -> None:
     body = build_search_body(SearchQuery())
-    filters = body["query"]["bool"]["filter"]
+    filters = _bool_query(body)["filter"]
     assert any("terms" in clause and "type" in clause["terms"] for clause in filters)
 
 
 def test_gleaner_search_body_exact_id_term_filter() -> None:
     uri = "https://obis.org/dataset/abc"
     body = build_search_body(SearchQuery(id=uri))
-    filters = body["query"]["bool"]["filter"]
+    filters = _bool_query(body)["filter"]
     assert {"term": {"id": uri}} in filters
     assert any("terms" in clause and "type" in clause["terms"] for clause in filters)
 
@@ -113,7 +134,7 @@ def test_gleaner_search_body_exact_id_term_filter() -> None:
 def test_gleaner_search_body_exact_id_with_graph_fragments() -> None:
     uri = "https://example.org/geo/1"
     body = build_search_body(SearchQuery(id=uri, include_graph_fragments=True))
-    assert body["query"]["bool"]["filter"] == [{"term": {"id": uri}}]
+    assert _bool_query(body)["filter"] == [{"term": {"id": uri}}]
 
 
 def test_gleaner_type_filter_preserves_pascal_case() -> None:

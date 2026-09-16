@@ -43,6 +43,13 @@ SEARCH_SOURCE_FIELDS = [
     "jsonld",
 ]
 
+# Prefer Datasets (and slightly richer records) in ranking without changing the
+# default "All types" filter. Applied via function_score so empty-query landing
+# and keyword search both benefit.
+DATASET_TYPE_BOOST = 2
+HAS_DESCRIPTION_BOOST = 1.25
+HAS_KEYWORDS_BOOST = 1.15
+
 
 def _gleaner_type_match_values(item: str) -> list[str]:
     """Map UI / facet type ids to values stored on the Gleaner `type` keyword field."""
@@ -119,11 +126,28 @@ def _filter_agg(filters: list[dict[str, Any]], field: str, size: int) -> dict[st
     }
 
 
+def _score_functions() -> list[dict[str, Any]]:
+    return [
+        {
+            "filter": {"terms": {"type": _type_values_for_filter(["dataset"])}},
+            "weight": DATASET_TYPE_BOOST,
+        },
+        {
+            "filter": {"exists": {"field": "description"}},
+            "weight": HAS_DESCRIPTION_BOOST,
+        },
+        {
+            "filter": {"exists": {"field": "keywords"}},
+            "weight": HAS_KEYWORDS_BOOST,
+        },
+    ]
+
+
 def build_search_body(query: SearchQuery) -> dict[str, Any]:
     filters = _base_filters(query)
-    must: list[dict[str, Any]] = []
-    if query.q:
-        must.append(
+    # Empty queries need a non-zero base score so function weights can rank hits.
+    must: list[dict[str, Any]] = (
+        [
             {
                 "multi_match": {
                     "query": query.q,
@@ -131,13 +155,23 @@ def build_search_body(query: SearchQuery) -> dict[str, Any]:
                     "type": "best_fields",
                 }
             }
-        )
+        ]
+        if query.q
+        else [{"match_all": {}}]
+    )
 
     body: dict[str, Any] = {
         "query": {
-            "bool": {
-                "filter": filters,
-                **({"must": must} if must else {}),
+            "function_score": {
+                "query": {
+                    "bool": {
+                        "filter": filters,
+                        "must": must,
+                    }
+                },
+                "functions": _score_functions(),
+                "score_mode": "multiply",
+                "boost_mode": "multiply",
             }
         },
         "from": (query.page - 1) * query.size,
