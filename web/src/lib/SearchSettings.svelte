@@ -41,6 +41,10 @@
       <button type="submit" class="search-settings-close" aria-label="Close settings">×</button>
     </header>
 
+    <p class="search-settings-disclaimer">
+      Disclaimer: these are experimental features that may be removed at any time.
+    </p>
+
     <div class="search-settings-options">
       <label class="search-settings-option">
         <input

@@ -749,6 +749,13 @@ body {
   font-weight: 600;
 }
 
+.search-settings-disclaimer {
+  margin: 0 0 0.85rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
 .search-settings-close {
   border: 0;
   background: none;

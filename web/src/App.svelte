@@ -14,12 +14,6 @@
   } from "./lib/api";
   import { formatNumber } from "./lib/format";
   import { buildSearchUrl, parseSearchParams, toggleValue } from "./lib/url";
-  import {
-    readGraphFragmentsPreference,
-    readRelatedRecordsPreference,
-    writeGraphFragmentsPreference,
-    writeRelatedRecordsPreference,
-  } from "./lib/searchSettings";
   import { trackSearch } from "./lib/analytics";
   import "./app.css";
 
@@ -42,8 +36,8 @@
   let scrollObserver: IntersectionObserver | undefined = $state();
   let typeOptions = $state<string[]>([]);
   let sourceOptions = $state<{ id: string; name?: string | null }[]>([]);
-  let includeGraphFragments = $state(readGraphFragmentsPreference());
-  let showRelatedRecords = $state(readRelatedRecordsPreference());
+  let includeGraphFragments = $state(false);
+  let showRelatedRecords = $state(false);
   let settingsOpen = $state(false);
   let searchGeneration = 0;
 
@@ -157,10 +151,6 @@
     selectedTypes = params.types ?? [];
     selectedSources = params.source ?? [];
     page = params.page ?? 1;
-    if (url.searchParams.has("include_graph_fragments")) {
-      includeGraphFragments = Boolean(params.include_graph_fragments);
-      writeGraphFragmentsPreference(includeGraphFragments);
-    }
   }
 
   onMount(() => {
@@ -238,7 +228,6 @@
 
   async function handleGraphFragmentsChange(enabled: boolean) {
     includeGraphFragments = enabled;
-    writeGraphFragmentsPreference(enabled);
     selectedTypes = [];
     typeOptions = [];
     page = 1;
@@ -247,7 +236,6 @@
 
   function handleRelatedRecordsChange(enabled: boolean) {
     showRelatedRecords = enabled;
-    writeRelatedRecordsPreference(enabled);
   }
 
   async function handleHomeClick(event: MouseEvent) {

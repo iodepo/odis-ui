@@ -30,9 +30,7 @@ export function buildSearchUrl(params: SearchParams): string {
   params.types?.forEach((type) => url.searchParams.append("types", type));
   params.source?.forEach((source) => url.searchParams.append("source", source));
   if (params.page && params.page > 1) url.searchParams.set("page", String(params.page));
-  if (params.include_graph_fragments) {
-    url.searchParams.set("include_graph_fragments", "1");
-  }
+  // Optional/experimental flags stay session-only and are not mirrored into the URL.
 
   return `${url.pathname}${url.search}`;
 }
