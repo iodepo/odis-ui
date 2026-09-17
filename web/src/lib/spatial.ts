@@ -200,7 +200,7 @@ export const OBIS_COASTLINE_STYLE: StyleSpecification = {
     {
       id: "background",
       type: "background",
-      paint: { "background-color": "#ffffff" },
+      paint: { "background-color": "#fafbfc" },
     },
     {
       id: "coastlines",

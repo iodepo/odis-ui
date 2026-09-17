@@ -63,7 +63,7 @@
       ]);
       if (cancelled) return;
 
-      const { Map, NavigationControl, LngLatBounds, setWorkerUrl } = maplibre;
+      const { Map, NavigationControl, GlobeControl, LngLatBounds, setWorkerUrl } = maplibre;
       setWorkerUrl(workerMod.default);
 
       map = new Map({
@@ -77,6 +77,7 @@
       });
 
       map.addControl(new NavigationControl({ showCompass: false }), "top-right");
+      map.addControl(new GlobeControl(), "top-right");
 
       const fitToExtent = () => {
         if (!map) return;
