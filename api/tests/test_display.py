@@ -349,3 +349,59 @@ def test_organization_title_falls_back_to_legal_name() -> None:
         "organization",
     )
     assert display.title == "Marine Biological Association"
+
+
+def test_course_shows_instance_start_and_end_dates() -> None:
+    display = display_for(
+        {
+            "type": ["Course"],
+            "name": "Ocean data management",
+            "jsonld": {
+                "hasCourseInstance": {
+                    "@type": "CourseInstance",
+                    "startDate": "2026-04-01",
+                    "endDate": "2026-04-12",
+                },
+            },
+        },
+        "course",
+    )
+    labels = {fact.label: fact for fact in display.facts}
+    assert display.title == "Ocean data management"
+    assert labels["Start date"].value == "2026-04-01"
+    assert labels["End date"].value == "2026-04-12"
+
+
+def test_course_uses_first_instance_with_dates() -> None:
+    display = display_for(
+        {
+            "type": ["Course"],
+            "name": "Marine GIS",
+            "jsonld": {
+                "hasCourseInstance": [
+                    {"@type": "CourseInstance"},
+                    {
+                        "@type": "CourseInstance",
+                        "schema:startDate": "2025-09-01",
+                        "schema:endDate": "2025-09-05",
+                    },
+                ],
+            },
+        },
+        "course",
+    )
+    labels = {fact.label: fact for fact in display.facts}
+    assert labels["Start date"].value == "2025-09-01"
+    assert labels["End date"].value == "2025-09-05"
+
+
+def test_course_omits_dates_when_missing() -> None:
+    display = display_for(
+        {
+            "type": ["Course"],
+            "name": "Intro to OBIS",
+            "jsonld": {"hasCourseInstance": {"@type": "CourseInstance"}},
+        },
+        "course",
+    )
+    assert display.facts == ()

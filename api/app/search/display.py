@@ -351,12 +351,32 @@ def publication_presenter(source: dict[str, Any]) -> RecordDisplay:
     return RecordDisplay(title=title, facts=tuple(facts))
 
 
+def course_presenter(source: dict[str, Any]) -> RecordDisplay:
+    title = _text(get_property(source, "name")) or UNTITLED
+
+    facts: list[DisplayFact] = []
+    for instance in _as_list(get_property(source, "hasCourseInstance")):
+        if not isinstance(instance, dict):
+            continue
+        start = _text(_lookup(instance, "startDate"))
+        end = _text(_lookup(instance, "endDate"))
+        if start:
+            facts.append(DisplayFact(label="Start date", value=start))
+        if end:
+            facts.append(DisplayFact(label="End date", value=end))
+        if start or end:
+            break
+
+    return RecordDisplay(title=title, facts=tuple(facts))
+
+
 PRESENTERS: dict[str, Presenter] = {
     "dataset": dataset_presenter,
     "person": person_presenter,
     "organization": organization_presenter,
     "creativework": publication_presenter,
     "scholarlyarticle": publication_presenter,
+    "course": course_presenter,
 }
 
 
