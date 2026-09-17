@@ -120,7 +120,7 @@
           <dd>
             {#if fact.links?.length}
               {#each fact.links as link, i (link.href)}
-                {#if i > 0}{" "}{/if}
+                {#if i > 0}{", "}{/if}
                 <a href={link.href} target="_blank" rel="noopener noreferrer">{link.value}</a>
               {/each}
             {:else if fact.href}

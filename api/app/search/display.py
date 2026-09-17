@@ -325,7 +325,7 @@ def dataset_presenter(source: dict[str, Any]) -> RecordDisplay:
     if distribution_links:
         facts.append(
             DisplayFact(
-                label="Distribution",
+                label="Data access",
                 value=", ".join(link.value for link in distribution_links),
                 href=distribution_links[0].href if len(distribution_links) == 1 else None,
                 links=distribution_links,

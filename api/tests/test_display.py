@@ -186,7 +186,7 @@ def test_dataset_distribution_links() -> None:
         },
         "dataset",
     )
-    distributions = [fact for fact in display.facts if fact.label == "Distribution"]
+    distributions = [fact for fact in display.facts if fact.label == "Data access"]
     assert len(distributions) == 1
     fact = distributions[0]
     assert fact.value == "ODV, NetCDF"
@@ -215,7 +215,7 @@ def test_dataset_distribution_skips_unresolved_reference() -> None:
         },
         "dataset",
     )
-    distributions = [fact for fact in display.facts if fact.label == "Distribution"]
+    distributions = [fact for fact in display.facts if fact.label == "Data access"]
     assert len(distributions) == 1
     assert distributions[0].value == "CSV"
     assert distributions[0].href == "https://example.org/data.csv"
@@ -233,7 +233,7 @@ def test_dataset_distribution_string_url() -> None:
         },
         "dataset",
     )
-    distributions = [fact for fact in display.facts if fact.label == "Distribution"]
+    distributions = [fact for fact in display.facts if fact.label == "Data access"]
     assert len(distributions) == 1
     assert distributions[0].value == "data.zip"
     assert distributions[0].href == "https://example.org/files/data.zip"
