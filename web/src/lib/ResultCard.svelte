@@ -136,11 +136,6 @@
   {#if highlightedSummary || item.summary}
     <SummaryText summary={item.summary ?? ""} highlightedSummary={highlightedSummary} />
   {/if}
-  {#if item.spatial && (item.spatial.boxes.length || item.spatial.points.length)}
-    <div class="card-foot">
-      <SpatialExtentMap spatial={item.spatial} recordType={item.type} />
-    </div>
-  {/if}
   <div class="record-links">
     {#if item.url}
       <a class="record-link" href={item.url} target="_blank" rel="noopener noreferrer">URL</a>
@@ -163,6 +158,11 @@
       </a>
     {/if}
   </div>
+  {#if item.spatial && (item.spatial.boxes.length || item.spatial.points.length)}
+    <div class="card-foot">
+      <SpatialExtentMap spatial={item.spatial} recordType={item.type} />
+    </div>
+  {/if}
 </article>
 
 {#if showRelatedLink && relatedOpen}

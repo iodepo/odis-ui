@@ -1,3 +1,4 @@
+import type { StyleSpecification } from "maplibre-gl";
 import type { SpatialExtent } from "./api";
 import type { TypeThemeKey } from "./typeTheme";
 
@@ -118,4 +119,98 @@ export const extentThemeClass: Record<TypeThemeKey, string> = {
   training: "training",
   project: "project",
   default: "default",
+};
+
+/** Stroke/fill colors matching CSS theme tokens in app.css */
+export const extentThemeColors: Record<TypeThemeKey, { stroke: string; fill: string }> = {
+  dataset: { stroke: "#2f7d68", fill: "#dcf0e9" },
+  literature: { stroke: "#b4503c", fill: "#f7ddd5" },
+  org: { stroke: "#115a9e", fill: "#cce4f6" },
+  training: { stroke: "#9a6d12", fill: "#faedd4" },
+  project: { stroke: "#3d56b8", fill: "#e4e8f8" },
+  default: { stroke: "#0077d4", fill: "#cce4f6" },
+};
+
+function boxRing(south: number, west: number, north: number, east: number): [number, number][] {
+  return [
+    [west, south],
+    [east, south],
+    [east, north],
+    [west, north],
+    [west, south],
+  ];
+}
+
+/** GeoJSON for MapLibre: boxes as polygons, points as Point features. */
+export function spatialToGeoJSON(spatial: SpatialExtent): GeoJSON.FeatureCollection {
+  const features: GeoJSON.Feature[] = [];
+
+  for (const box of spatial.boxes) {
+    if (box.west <= box.east) {
+      features.push({
+        type: "Feature",
+        properties: { kind: "box" },
+        geometry: {
+          type: "Polygon",
+          coordinates: [boxRing(box.south, box.west, box.north, box.east)],
+        },
+      });
+    } else {
+      // Dateline-crossing box → two polygons
+      features.push({
+        type: "Feature",
+        properties: { kind: "box" },
+        geometry: {
+          type: "MultiPolygon",
+          coordinates: [
+            [boxRing(box.south, box.west, box.north, 180)],
+            [boxRing(box.south, -180, box.north, box.east)],
+          ],
+        },
+      });
+    }
+  }
+
+  for (const point of spatial.points) {
+    features.push({
+      type: "Feature",
+      properties: { kind: "point" },
+      geometry: {
+        type: "Point",
+        coordinates: [point.lon, point.lat],
+      },
+    });
+  }
+
+  return { type: "FeatureCollection", features };
+}
+
+/** Same coastline vector tiles as the OBIS.org header map. */
+export const OBIS_COASTLINE_STYLE: StyleSpecification = {
+  version: 8,
+  sources: {
+    coastlines: {
+      type: "vector",
+      tiles: ["https://tiles.obis.org/coastlines_tiles/{z}/{x}/{y}.pbf"],
+      minzoom: 0,
+      maxzoom: 14,
+    },
+  },
+  layers: [
+    {
+      id: "background",
+      type: "background",
+      paint: { "background-color": "#ffffff" },
+    },
+    {
+      id: "coastlines",
+      type: "line",
+      source: "coastlines",
+      "source-layer": "coastlines",
+      paint: {
+        "line-color": "#000000",
+        "line-width": 0.5,
+      },
+    },
+  ],
 };
