@@ -19,6 +19,11 @@
       }
     })();
   });
+
+  function pct(part: number, whole: number): number {
+    if (whole <= 0) return 0;
+    return Math.min(100, Math.max(0, (part / whole) * 100));
+  }
 </script>
 
 {#snippet nodeTable(nodes: NetworkNodeStatus[])}
@@ -67,6 +72,12 @@
   {:else if error}
     <p class="error">{error}</p>
   {:else if status}
+    {@const total = status.total_nodes}
+    {@const errorsPct = pct(status.total_error_nodes, total)}
+    {@const unresponsivePct = pct(status.unresponsive_count, total)}
+    {@const parsingPct = pct(status.parsing_error_count, total)}
+    {@const summonerPct = pct(status.summoner_error_count, total)}
+
     <h2>Summary</h2>
     <dl class="network-summary">
       <div>
@@ -76,19 +87,65 @@
       <div>
         <dt>Reporting errors</dt>
         <dd>{status.total_error_nodes}</dd>
+        <div
+          class="network-stat-bar"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-valuenow={status.total_error_nodes}
+          aria-label="{status.total_error_nodes} of {total} nodes reporting errors"
+        >
+          <span class="network-stat-bar-errors" style="width: {errorsPct}%"></span>
+        </div>
       </div>
       <div>
         <dt>Unresponsive</dt>
         <dd>{status.unresponsive_count}</dd>
+        <div
+          class="network-stat-bar"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-valuenow={status.unresponsive_count}
+          aria-label="{status.unresponsive_count} of {total} nodes unresponsive"
+        >
+          <span class="network-stat-bar-errors" style="width: {errorsPct}%"></span>
+          <span class="network-stat-bar-subset" style="width: {unresponsivePct}%"></span>
+        </div>
       </div>
       <div>
-        <dt>Parsing errors</dt>
+        <dt>with parsing errors</dt>
         <dd>{status.parsing_error_count}</dd>
+        <div
+          class="network-stat-bar"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-valuenow={status.parsing_error_count}
+          aria-label="{status.parsing_error_count} of {total} nodes with parsing errors"
+        >
+          <span class="network-stat-bar-errors" style="width: {errorsPct}%"></span>
+          <span
+            class="network-stat-bar-subset"
+            style="left: {Math.max(0, errorsPct - parsingPct)}%; width: {parsingPct}%"
+          ></span>
+        </div>
       </div>
       {#if status.summoner_error_count > 0}
         <div>
           <dt>Summoner errors</dt>
           <dd>{status.summoner_error_count}</dd>
+          <div
+            class="network-stat-bar"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={total}
+            aria-valuenow={status.summoner_error_count}
+            aria-label="{status.summoner_error_count} of {total} nodes with summoner errors"
+          >
+            <span class="network-stat-bar-errors" style="width: {errorsPct}%"></span>
+            <span class="network-stat-bar-subset" style="width: {summonerPct}%"></span>
+          </div>
         </div>
       {/if}
     </dl>
