@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     # Default: federated `odis` index on the Gleaner ES cluster (:9400).
     search_backend: str = "elasticsearch"
 
-    gleaner_elasticsearch_url: str = "http://odis.org:9400"
+    gleaner_elasticsearch_url: str = "http://elasticsearch.odis.org:9400"
     gleaner_elasticsearch_user: str = ""
     gleaner_elasticsearch_password: str = ""
     # Comma-separated; empty = `odis` only (per-source gleaner-* indices are ignored).
