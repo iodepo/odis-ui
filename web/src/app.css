@@ -867,6 +867,19 @@ body {
   color: var(--ink);
 }
 
+.network-stat-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.network-stat-link:hover {
+  color: inherit;
+}
+
+.network-page h2[id] {
+  scroll-margin-top: 1.25rem;
+}
+
 .network-stat-bar {
   position: relative;
   margin-top: 0.4rem;
@@ -936,6 +949,73 @@ body {
 .network-table td:first-child {
   width: 32%;
   min-width: 10rem;
+}
+
+.network-table-all th:first-child,
+.network-table-all td:first-child {
+  width: 1px;
+  min-width: 0;
+  max-width: none;
+}
+
+.network-status-col {
+  width: 1px;
+  padding-left: 0.65rem !important;
+  padding-right: 0 !important;
+  vertical-align: top !important;
+  white-space: nowrap;
+}
+
+.network-status-col .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.network-status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-top: 0.4em;
+  margin-right: 0.4rem;
+  overflow: visible;
+  vertical-align: top;
+}
+
+.network-status-ok {
+  fill: #22c55e;
+}
+
+.network-status-down {
+  fill: #ef4444;
+}
+
+.network-table-all th:nth-child(2),
+.network-table-all td:nth-child(2) {
+  width: 22%;
+}
+
+.network-table-all th:nth-child(3),
+.network-table-all td:nth-child(3) {
+  width: 16%;
+  white-space: nowrap;
+}
+
+.network-table-all th:nth-child(5),
+.network-table-all td:nth-child(5) {
+  width: 12%;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.network-num {
+  font-variant-numeric: tabular-nums;
 }
 
 .network-table a {

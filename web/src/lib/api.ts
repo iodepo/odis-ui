@@ -113,6 +113,9 @@ export interface NetworkNodeStatus {
   id: string;
   name: string;
   url?: string | null;
+  last_indexed?: string | null;
+  summoner_stored?: number | null;
+  responsive: boolean;
   errors: string[];
 }
 
@@ -123,6 +126,7 @@ export interface NetworkStatusResponse {
   unresponsive_count: number;
   parsing_error_count: number;
   summoner_error_count: number;
+  all_nodes: NetworkNodeStatus[];
   unresponsive: NetworkNodeStatus[];
   parsing_errors: NetworkNodeStatus[];
 }

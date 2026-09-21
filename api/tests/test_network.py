@@ -24,6 +24,8 @@ def test_classify_healthy_unresponsive_parsing_and_missing_source() -> None:
             "_source": {
                 "name": "Healthy Node",
                 "url": "https://healthy.example/sitemap.xml",
+                "last_indexed": "2026-09-01T12:00:00Z",
+                "summoner_stored": 1200,
                 "summoner_errors": 0,
                 "summoner_pages_seen": 10,
                 "summoner_messages": [],
@@ -34,6 +36,7 @@ def test_classify_healthy_unresponsive_parsing_and_missing_source() -> None:
             "_source": {
                 "name": "Down Node",
                 "url": "https://down.example/sitemap.xml",
+                "summoner_stored": 0,
                 "summoner_errors": 2,
                 "summoner_pages_seen": 0,
                 "summoner_messages": ["timed out", "no page URLs from sitemap"],
@@ -44,6 +47,8 @@ def test_classify_healthy_unresponsive_parsing_and_missing_source() -> None:
             "_source": {
                 "name": "Parse Node",
                 "url": "https://parse.example/sitemap.xml",
+                "dateModified": "2026-08-15T08:00:00Z",
+                "summoner_stored": 40,
                 "summoner_errors": 3,
                 "summoner_pages_seen": 5,
                 "summoner_messages": ["no application/ld+json script tags found"],
@@ -62,6 +67,24 @@ def test_classify_healthy_unresponsive_parsing_and_missing_source() -> None:
     assert status.unresponsive[0].name == "Down Node"
     assert status.unresponsive[0].errors == ["timed out", "no page URLs from sitemap"]
     assert status.parsing_errors[0].name == "Parse Node"
+    assert [n.name for n in status.all_nodes] == [
+        "broken",
+        "Down Node",
+        "Healthy Node",
+        "Parse Node",
+    ]
+    healthy = next(n for n in status.all_nodes if n.id == "healthy")
+    assert healthy.last_indexed == "2026-09-01T12:00:00Z"
+    assert healthy.summoner_stored == 1200
+    assert healthy.responsive is True
+    parse = next(n for n in status.all_nodes if n.id == "parse")
+    assert parse.last_indexed == "2026-08-15T08:00:00Z"
+    assert parse.summoner_stored == 40
+    assert parse.responsive is True
+    down = next(n for n in status.all_nodes if n.id == "down")
+    assert down.responsive is False
+    broken = next(n for n in status.all_nodes if n.id == "broken")
+    assert broken.responsive is False
     assert status.updated_at
 
 

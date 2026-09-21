@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { getNetworkStatus, type NetworkNodeStatus, type NetworkStatusResponse } from "./api";
+  import { formatNumber } from "./format";
 
   let status: NetworkStatusResponse | null = $state(null);
   let error: string | null = $state(null);
@@ -23,6 +24,19 @@
   function pct(part: number, whole: number): number {
     if (whole <= 0) return 0;
     return Math.min(100, Math.max(0, (part / whole) * 100));
+  }
+
+  function formatLastIndexed(value: string | null | undefined): string {
+    if (value == null || value === "") return "—";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return value;
+    return d.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
 </script>
 
@@ -82,11 +96,15 @@
     <dl class="network-summary">
       <div>
         <dt>Total nodes</dt>
-        <dd>{status.total_nodes}</dd>
+        <dd>
+          <a href="#all-nodes" class="network-stat-link">{status.total_nodes}</a>
+        </dd>
       </div>
       <div>
         <dt>Reporting errors</dt>
-        <dd>{status.total_error_nodes}</dd>
+        <dd>
+          <a href="#unresponsive" class="network-stat-link">{status.total_error_nodes}</a>
+        </dd>
         <div
           class="network-stat-bar"
           role="progressbar"
@@ -100,7 +118,9 @@
       </div>
       <div>
         <dt>Unresponsive</dt>
-        <dd>{status.unresponsive_count}</dd>
+        <dd>
+          <a href="#unresponsive" class="network-stat-link">{status.unresponsive_count}</a>
+        </dd>
         <div
           class="network-stat-bar"
           role="progressbar"
@@ -115,7 +135,9 @@
       </div>
       <div>
         <dt>with parsing errors</dt>
-        <dd>{status.parsing_error_count}</dd>
+        <dd>
+          <a href="#parsing-errors" class="network-stat-link">{status.parsing_error_count}</a>
+        </dd>
         <div
           class="network-stat-bar"
           role="progressbar"
@@ -134,7 +156,9 @@
       {#if status.summoner_error_count > 0}
         <div>
           <dt>Summoner errors</dt>
-          <dd>{status.summoner_error_count}</dd>
+          <dd>
+            <a href="#all-nodes" class="network-stat-link">{status.summoner_error_count}</a>
+          </dd>
           <div
             class="network-stat-bar"
             role="progressbar"
@@ -150,10 +174,64 @@
       {/if}
     </dl>
 
-    <h2>Unresponsive nodes ({status.unresponsive_count})</h2>
+    <h2 id="all-nodes">All nodes ({status.all_nodes.length})</h2>
+    {#if status.all_nodes.length === 0}
+      <p class="network-empty">None</p>
+    {:else}
+      <div class="network-table-wrap">
+        <table class="network-table network-table-all">
+          <thead>
+            <tr>
+              <th scope="col" class="network-status-col">
+                <span class="visually-hidden">Status</span>
+              </th>
+              <th scope="col">Name</th>
+              <th scope="col">Last indexed</th>
+              <th scope="col">URL</th>
+              <th scope="col">Indexed documents</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each status.all_nodes as node (node.id)}
+              <tr>
+                <td class="network-status-col">
+                  <svg
+                    class="network-status-dot"
+                    class:network-status-ok={node.responsive}
+                    class:network-status-down={!node.responsive}
+                    width="8"
+                    height="8"
+                    viewBox="0 0 8 8"
+                    aria-label={node.responsive ? "Responsive" : "Unresponsive"}
+                    role="img"
+                  >
+                    <title>{node.responsive ? "Responsive" : "Unresponsive"}</title>
+                    <circle cx="4" cy="4" r="4" />
+                  </svg>
+                </td>
+                <td>{node.name}</td>
+                <td class="network-num">{formatLastIndexed(node.last_indexed)}</td>
+                <td>
+                  {#if node.url}
+                    <a href={node.url} target="_blank" rel="noopener noreferrer">{node.url}</a>
+                  {:else}
+                    —
+                  {/if}
+                </td>
+                <td class="network-num">
+                  {node.summoner_stored != null ? formatNumber(node.summoner_stored) : "—"}
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    {/if}
+
+    <h2 id="unresponsive">Unresponsive nodes ({status.unresponsive_count})</h2>
     {@render nodeTable(status.unresponsive)}
 
-    <h2>Nodes with parsing errors ({status.parsing_error_count})</h2>
+    <h2 id="parsing-errors">Nodes with parsing errors ({status.parsing_error_count})</h2>
     {@render nodeTable(status.parsing_errors)}
   {/if}
 </section>

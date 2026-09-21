@@ -13,3 +13,6 @@ async def test_network_status_endpoint(client: AsyncClient) -> None:
     assert data["parsing_error_count"] == 1
     assert data["unresponsive"][0]["name"] == "Unresponsive Node"
     assert data["parsing_errors"][0]["name"] == "Parsing Node"
+    assert len(data["all_nodes"]) == 3
+    assert data["all_nodes"][0]["name"] == "Healthy Node"
+    assert data["all_nodes"][0]["summoner_stored"] == 1200

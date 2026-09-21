@@ -47,11 +47,42 @@ class FakeSearchBackend:
             unresponsive_count=1,
             parsing_error_count=1,
             summoner_error_count=0,
+            all_nodes=[
+                NetworkNodeStatus(
+                    id="healthy-node",
+                    name="Healthy Node",
+                    url="https://example.org/healthy/sitemap.xml",
+                    last_indexed="2026-09-01T12:00:00+00:00",
+                    summoner_stored=1200,
+                    responsive=True,
+                ),
+                NetworkNodeStatus(
+                    id="parsing-node",
+                    name="Parsing Node",
+                    url="https://example.org/data/sitemap.xml",
+                    last_indexed="2026-08-15T08:00:00+00:00",
+                    summoner_stored=40,
+                    responsive=True,
+                    errors=["no application/ld+json script tags found"],
+                ),
+                NetworkNodeStatus(
+                    id="unresponsive-node",
+                    name="Unresponsive Node",
+                    url="https://example.org/sitemap.xml",
+                    last_indexed=None,
+                    summoner_stored=0,
+                    responsive=False,
+                    errors=["timed out"],
+                ),
+            ],
             unresponsive=[
                 NetworkNodeStatus(
                     id="unresponsive-node",
                     name="Unresponsive Node",
                     url="https://example.org/sitemap.xml",
+                    last_indexed=None,
+                    summoner_stored=0,
+                    responsive=False,
                     errors=["timed out"],
                 )
             ],
@@ -60,6 +91,9 @@ class FakeSearchBackend:
                     id="parsing-node",
                     name="Parsing Node",
                     url="https://example.org/data/sitemap.xml",
+                    last_indexed="2026-08-15T08:00:00+00:00",
+                    summoner_stored=40,
+                    responsive=True,
                     errors=["no application/ld+json script tags found"],
                 )
             ],
