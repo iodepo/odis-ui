@@ -18,7 +18,7 @@ from app.domain.search import (
 )
 from app.search.display import display_for
 from app.search.gleaner.odiscat import OdiscatNames
-from app.search.elasticsearch.mappings import pascal_type, raw_types_for_filter
+from app.search.elasticsearch.mappings import raw_types_for_filter
 from app.search.elasticsearch.spatial import extract_spatial_extent
 from app.search.gleaner.ids import encode_record_id
 
@@ -244,10 +244,13 @@ def _normalize_type(raw: Any) -> str | None:
 
 
 def _display_type(normalized: str | None, raw: Any) -> str:
+    """Show the @type as indexed (minus any prefix) rather than rebuilding its casing."""
+    values = [_strip_type_prefix(value) for value in _as_str_list(raw)]
     if normalized:
-        return pascal_type(normalized)
-    values = _as_str_list(raw)
-    return _strip_type_prefix(values[0]) if values else "Record"
+        for value in values:
+            if value.lower() == normalized:
+                return value
+    return values[0] if values else "Record"
 
 
 def _merge_type_facets(
@@ -256,6 +259,11 @@ def _merge_type_facets(
     include_graph_fragments: bool = False,
 ) -> list[FacetBucket]:
     """Collapse schema.org prefix variants (Dataset vs schema:Dataset) into one facet.
+
+    The bucket keys are kept as indexed, so the value a facet emits is exactly the
+    value that filters for it (`type` is a case-sensitive keyword field). Types that
+    differ only in casing stay separate on purpose: that surfaces a source publishing
+    a non-standard @type instead of hiding it behind a reconstructed spelling.
 
     By default only primary searchable types are returned so secondary @types
     on multi-typed documents (catalogue-specific classes, graph fragments)
@@ -266,15 +274,15 @@ def _merge_type_facets(
         key = bucket.get("key")
         if not key:
             continue
-        canonical = _strip_type_prefix(str(key)).lower()
-        if not canonical:
+        raw = _strip_type_prefix(str(key))
+        if not raw:
             continue
-        if not include_graph_fragments and canonical not in FACET_RECORD_TYPES:
+        if not include_graph_fragments and raw.lower() not in FACET_RECORD_TYPES:
             continue
-        counts[canonical] = counts.get(canonical, 0) + int(bucket["doc_count"])
+        counts[raw] = counts.get(raw, 0) + int(bucket["doc_count"])
     return [
-        FacetBucket(value=pascal_type(canonical), count=count)
-        for canonical, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+        FacetBucket(value=raw, count=count)
+        for raw, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
     ]
 
 
