@@ -247,7 +247,7 @@ def test_map_search_response_keeps_fragment_type_facets_when_requested() -> None
     by_value = {bucket.value: bucket.count for bucket in response.facets.types}
     assert by_value["Dataset"] == 13
     assert by_value["DataCatalog"] == 5
-    assert by_value["Inputmetadatadescription"] == 893
+    assert by_value["InputMetadataDescription"] == 893
 
 
 def test_map_highlight_renames_fields() -> None:
@@ -276,3 +276,67 @@ def test_map_document_strips_schema_type_prefix() -> None:
         },
     )
     assert item.type == "Dataset"
+
+
+_MULTIWORD_TYPE_BUCKETS = [
+    {"key": "GeoShape", "doc_count": 13235},
+    {"key": "WebPage", "doc_count": 622},
+    {"key": "DigitalDocument", "doc_count": 43},
+    {"key": "WebAPI", "doc_count": 72},
+    {"key": "Researcher", "doc_count": 3},
+    {"key": "schema:DigitalDocument", "doc_count": 2},
+]
+
+
+def _type_facets(buckets: list[dict]) -> dict[str, int]:
+    response = map_search_response(
+        SearchQuery(include_graph_fragments=True),
+        {
+            "hits": {"total": {"value": 0}, "hits": []},
+            "aggregations": {
+                "types": {"buckets": {"buckets": buckets}},
+                "sources": {"buckets": {"buckets": []}},
+            },
+        },
+    )
+    return {bucket.value: bucket.count for bucket in response.facets.types}
+
+
+def test_type_facets_keep_indexed_casing() -> None:
+    """Regression for #43: facet values must be the @type as indexed, not rebuilt."""
+    by_value = _type_facets(_MULTIWORD_TYPE_BUCKETS)
+    assert by_value["GeoShape"] == 13235
+    assert by_value["WebAPI"] == 72
+    assert by_value["Researcher"] == 3
+    # prefix variants still merge into the bare spelling
+    assert by_value["DigitalDocument"] == 45
+    assert "Digitaldocument" not in by_value
+    assert "schema:DigitalDocument" not in by_value
+
+
+def test_type_facets_keep_case_variants_separate() -> None:
+    """A source publishing a non-standard casing stays visible instead of being merged."""
+    by_value = _type_facets(
+        [{"key": "WebPage", "doc_count": 622}, {"key": "Webpage", "doc_count": 4}]
+    )
+    assert by_value == {"WebPage": 622, "Webpage": 4}
+
+
+def test_type_facet_values_filter_to_themselves() -> None:
+    """Every value a facet emits must be usable as a `types=` filter."""
+    for value in _type_facets(_MULTIWORD_TYPE_BUCKETS):
+        body = build_search_body(SearchQuery(types=[value], include_graph_fragments=True))
+        assert value in body["post_filter"]["terms"]["type"], value
+
+
+def test_map_document_keeps_multiword_type_casing() -> None:
+    item = map_document_to_item(
+        "https://w3id.org/marco-bolo/mbo_7538f060",
+        {
+            "source": "marco-bolo-dataset-catalogue",
+            "id": "https://w3id.org/marco-bolo/mbo_7538f060",
+            "type": ["DigitalDocument"],
+            "name": "MARCO-BOLO workshop presentations",
+        },
+    )
+    assert item.type == "DigitalDocument"
