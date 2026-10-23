@@ -211,6 +211,26 @@ def _as_str(value: Any) -> str | None:
     return None
 
 
+def _http_url(value: Any) -> str | None:
+    """Return value only when it is an absolute http(s) URL.
+
+    GeoNetwork catalogues store distribution labels such as ``DataDownload``
+    in ``url``. Those must not be used as links.
+    """
+    text = _as_str(value)
+    if text and text.lower().startswith(("https://", "http://")):
+        return text
+    return None
+
+
+def _landing_url(source: dict[str, Any], doc_id: str) -> str | None:
+    return (
+        _http_url(source.get("url"))
+        or _http_url(source.get("source_url"))
+        or _http_url(doc_id)
+    )
+
+
 def _as_str_list(value: Any) -> list[str]:
     if isinstance(value, list):
         return [item for item in (_as_str(v) for v in value) if item]
@@ -321,7 +341,7 @@ def map_document_to_item(
     normalized = _normalize_type(source.get("type"))
     display = display_for(source, normalized)
     summary = _as_str(source.get("description"))
-    url = _as_str(source.get("url")) or _as_str(source.get("source_url"))
+    url = _landing_url(source, doc_id)
 
     if isinstance(source_names, OdiscatNames):
         entry = source_names.get(source_code)

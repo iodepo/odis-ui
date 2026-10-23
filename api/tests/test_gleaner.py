@@ -60,6 +60,53 @@ def test_map_gleaner_dataset_without_odiscat_name() -> None:
     assert item.source.name is None
 
 
+def test_map_gleaner_ignores_non_http_url() -> None:
+    record_id = "https://emodnet.ec.europa.eu/geonetwork/srv/api/records/971f291f-8ea4-4c34-a15d-a25b757b0f7c"
+    source_url = f"{record_id}?language=all"
+    item = map_document_to_item(
+        record_id,
+        {
+            "source": "catalogue-european-marine-observation-and-data-network",
+            "id": record_id,
+            "type": ["Dataset"],
+            "name": "Saronikos Gulf sediment data (1999-2018)",
+            "url": "DataDownload",
+            "source_url": source_url,
+        },
+    )
+    assert item.url == source_url
+
+
+def test_map_gleaner_falls_back_to_record_id_when_urls_are_not_http() -> None:
+    record_id = "https://metadata.naturalsciences.be/geonetwork/srv/api/records/bmdc.be:dataset:2033"
+    item = map_document_to_item(
+        record_id,
+        {
+            "source": "royal-belgian-institute-of-natural-sciences-metadata-portal",
+            "id": record_id,
+            "type": ["Dataset"],
+            "name": "Contaminants in seafood",
+            "url": "online information about the resource",
+            "source_url": "not a url",
+        },
+    )
+    assert item.url == record_id
+
+
+def test_map_gleaner_omits_link_when_no_http_url_exists() -> None:
+    item = map_document_to_item(
+        "abc123",
+        {
+            "source": "example",
+            "id": "abc123",
+            "type": ["Dataset"],
+            "name": "Untitled fragment",
+            "url": "DataDownload",
+        },
+    )
+    assert item.url is None
+
+
 def test_map_gleaner_person_with_geo() -> None:
     item = map_document_to_item(
         "https://oceanexpert.org/expert/1",
